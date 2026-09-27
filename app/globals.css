@@ -1,0 +1,144 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-bg text-ink font-sans antialiased;
+  }
+
+  ::selection {
+    background: rgba(74, 222, 128, 0.28);
+    color: #fff;
+  }
+
+  /* Scrollbar discreto, en la misma familia de verdes. */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: #0d2b1e;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: #1e4a30;
+    border-radius: 999px;
+    border: 2px solid #0d2b1e;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: #2d5a3d;
+  }
+}
+
+@layer components {
+  /* ---------------------------------------------------------------------
+   * EL EFECTO PIXELADO — el elemento más importante de la web (SPEC.md).
+   * Blur fuerte + forbidimos selección/copia, para que el usuario vea que
+   * hay información real pero no pueda leerla.
+   * ------------------------------------------------------------------- */
+  .pixelated {
+    filter: blur(6px);
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+  }
+
+  .pixelated-strong {
+    filter: blur(9px);
+    user-select: none;
+    -webkit-user-select: none;
+    pointer-events: none;
+  }
+
+  /* Desenfoque suave para el hover, insinúa "algo se puede ver". */
+  .pixelated-peek {
+    filter: blur(6px);
+    transition: filter 200ms ease;
+  }
+  .pixelated-peek:hover {
+    filter: blur(4px);
+  }
+
+  /* Marco de "esto está bloqueado". */
+  .locked-veil {
+    background: repeating-linear-gradient(
+      -45deg,
+      rgba(13, 43, 30, 0.55) 0px,
+      rgba(13, 43, 30, 0.55) 8px,
+      rgba(30, 74, 48, 0.5) 8px,
+      rgba(30, 74, 48, 0.5) 16px
+    );
+  }
+
+  .container-page {
+    @apply mx-auto w-full max-w-6xl px-5 sm:px-8;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-5 py-3
+           text-sm font-semibold transition-all duration-200
+           focus:outline-none focus-visible:ring-2 focus-visible:ring-accent
+           focus-visible:ring-offset-2 focus-visible:ring-offset-bg disabled:cursor-not-allowed;
+  }
+
+  .btn-accent {
+    @apply btn bg-accent text-white hover:bg-[#3ecf74] active:scale-[0.98];
+    box-shadow: 0 10px 30px -12px rgba(74, 222, 128, 0.7);
+  }
+
+  .btn-ghost {
+    @apply btn border border-line text-ink hover:border-accent hover:text-accent;
+  }
+
+  .card {
+    @apply rounded-xl border border-line bg-bg-2;
+  }
+
+  .input {
+    @apply w-full rounded-lg border border-line bg-[#123522] px-4 py-3 text-sm text-ink
+           placeholder:text-ink-2/70 focus:border-accent focus:outline-none
+           focus:ring-1 focus:ring-accent;
+  }
+
+  .label {
+    @apply mb-1.5 block text-xs font-medium uppercase tracking-wider text-ink-2;
+  }
+
+  .badge {
+    @apply inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1
+           text-[11px] font-medium;
+  }
+
+  /* Shimmer para los estados de carga tipo skeleton. */
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      #1e4a30 0%,
+      #2d5a3d 50%,
+      #1e4a30 100%
+    );
+    background-size: 200% 100%;
+    @apply animate-shimmer;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html {
+    scroll-behavior: auto;
+  }
+}
