@@ -109,14 +109,28 @@ try {
   console.log("html style attr:", info.inlineHtmlStyle);
   console.log("body style attr:", info.inlineBodyStyle);
 
-  const isDark = (c) => {
-    const m = c.match(/\d+/g);
-    if (!m) return false;
-    const [r, g, b] = m.map(Number);
-    return (r + g + b) / 3 < 90;
+  // El diseño es fondo blanco (token `bg` de tailwind.config.ts). Comprobamos
+  // la luminancia en vez de una cadena exacta, por si el navegador la
+  // normaliza a "rgb(255, 255, 255)" o "#fff".
+  const rgb = (c) => (c.match(/[\d.]+/g) ?? []).slice(0, 3).map(Number);
+  const luma = (c) => {
+    const [r, g, b] = rgb(c);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
   };
+  const hex = (c) => {
+    const [r, g, b] = rgb(c);
+    return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+  };
+  const bodyLuma = luma(info.bodyBg);
   console.log("");
-  console.log("VEREDICTO      :", isDark(info.bodyBg) ? "FONDO OSCURO OK" : "FONDO BLANCO :(");
+  console.log("body bg (hex)  :", hex(info.bodyBg));
+  console.log("luma           :", bodyLuma.toFixed(1), "/ 255");
+  console.log("VEREDICTO      :", bodyLuma > 200 ? "FONDO BLANCO OK" : "FONDO NO BLANCO :(");
+  if (bodyLuma <= 200) {
+    console.log("");
+    console.log("Aviso: si esperabas blanco y no lo es, mira el CSS servido y el");
+    console.log("atributo style inline de <html> que se imprime más arriba.");
+  }
   ws.close();
 } finally {
   chrome.kill("SIGKILL");

@@ -79,18 +79,24 @@ try {
   const err = await evaluate(ws, `document.querySelector('#url-error')?.textContent?.trim() ?? null`);
   err ? ok(`error visible sin llamar al servidor: "${err}"`) : bad("no se muestra el error de URL inválida");
   const bg = await evaluate(ws, `getComputedStyle(document.body).backgroundColor`);
-  bg === "rgb(13, 43, 30)" ? ok("fondo sigue verde oscuro tras el error") : bad(`fondo cambió a ${bg}`);
+  bg === "rgb(255, 255, 255)" ? ok("fondo sigue blanco tras el error") : bad(`fondo cambió a ${bg}`);
 
   console.log("== C. El modal de registro se abre ==");
   await evaluate(ws, `(() => {
     const btn = [...document.querySelectorAll('header button')].find(b => b.textContent.trim() === 'Sign up');
     btn.click();
   })()`);
-  await sleep(900);
-  const dialog = await evaluate(ws, `(() => {
-    const d = document.querySelector('[role="dialog"]');
-    return d ? d.textContent.includes('Desbloquea tus leads') : false;
-  })()`);
+  // router.push("/?auth=signup") pide la ruta al servidor, así que con el dev
+  // server recién compilado (o tras borrar .next) puede tardar bastante.
+  // Sondeamos en vez de esperar un tiempo fijo.
+  let dialog = false;
+  for (let i = 0; i < 20 && !dialog; i++) {
+    await sleep(500);
+    dialog = await evaluate(ws, `(() => {
+      const d = document.querySelector('[role="dialog"]');
+      return d ? d.textContent.includes('Desbloquea tus leads') : false;
+    })()`);
+  }
   dialog ? ok("el modal de registro abre correctamente") : bad("el modal no abre");
 
   console.log("== D. Registro real desde la UI ==");

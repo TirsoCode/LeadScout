@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    color-scheme: dark;
+    color-scheme: light;
   }
 
   html {
@@ -16,8 +16,8 @@
   }
 
   ::selection {
-    background: rgba(74, 222, 128, 0.28);
-    color: #fff;
+    background: rgba(21, 128, 61, 0.18);
+    color: #0f1a14;
   }
 
   /* Scrollbar discreto, en la misma familia de verdes. */
@@ -26,15 +26,15 @@
     height: 10px;
   }
   ::-webkit-scrollbar-track {
-    background: #0d2b1e;
+    background: #f4f7f5;
   }
   ::-webkit-scrollbar-thumb {
-    background: #1e4a30;
+    background: #cfdad3;
     border-radius: 999px;
-    border: 2px solid #0d2b1e;
+    border: 2px solid #f4f7f5;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: #2d5a3d;
+    background: #b3c4b9;
   }
 }
 
@@ -71,10 +71,10 @@
   .locked-veil {
     background: repeating-linear-gradient(
       -45deg,
-      rgba(13, 43, 30, 0.55) 0px,
-      rgba(13, 43, 30, 0.55) 8px,
-      rgba(30, 74, 48, 0.5) 8px,
-      rgba(30, 74, 48, 0.5) 16px
+      rgba(15, 26, 20, 0.16) 0px,
+      rgba(15, 26, 20, 0.16) 8px,
+      rgba(21, 128, 61, 0.18) 8px,
+      rgba(21, 128, 61, 0.18) 16px
     );
   }
 
@@ -90,8 +90,8 @@
   }
 
   .btn-accent {
-    @apply btn bg-accent text-white hover:bg-[#3ecf74] active:scale-[0.98];
-    box-shadow: 0 10px 30px -12px rgba(74, 222, 128, 0.7);
+    @apply btn bg-accent text-white hover:bg-accent-dim active:scale-[0.98];
+    box-shadow: 0 10px 26px -14px rgba(21, 128, 61, 0.55);
   }
 
   .btn-ghost {
@@ -103,7 +103,7 @@
   }
 
   .input {
-    @apply w-full rounded-lg border border-line bg-[#123522] px-4 py-3 text-sm text-ink
+    @apply w-full rounded-lg border border-line bg-white px-4 py-3 text-sm text-ink
            placeholder:text-ink-2/70 focus:border-accent focus:outline-none
            focus:ring-1 focus:ring-accent;
   }
@@ -121,9 +121,9 @@
   .shimmer {
     background: linear-gradient(
       90deg,
-      #1e4a30 0%,
-      #2d5a3d 50%,
-      #1e4a30 100%
+      #eef2ef 0%,
+      #f4f7f5 50%,
+      #eef2ef 100%
     );
     background-size: 200% 100%;
     @apply animate-shimmer;

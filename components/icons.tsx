@@ -134,10 +134,10 @@ export function IconGoogle({ className = "h-4 w-4" }: IconProps) {
 export function Logo({ className = "h-7 w-7" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 32 32" fill="none" aria-hidden="true">
-      <rect width="32" height="32" rx="8" fill="#4ade80" />
-      <circle cx="14.5" cy="16" r="7" stroke="#0d2b1e" strokeWidth="2.2" />
-      <path d="M19.6 20.2L26 26" stroke="#0d2b1e" strokeWidth="2.6" strokeLinecap="round" />
-      <circle cx="14.5" cy="16" r="2.4" fill="#0d2b1e" />
+      <rect width="32" height="32" rx="8" fill="#16a34a" />
+      <circle cx="14.5" cy="16" r="7" stroke="#ffffff" strokeWidth="2.2" />
+      <path d="M19.6 20.2L26 26" stroke="#ffffff" strokeWidth="2.6" strokeLinecap="round" />
+      <circle cx="14.5" cy="16" r="2.4" fill="#ffffff" />
     </svg>
   );
 }
@@ -147,7 +147,7 @@ export function IconReddit({ className = "h-4 w-4" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M12 2.5A9.5 9.5 0 0 0 4.3 5.8l.5 2.2A7.7 7.7 0 0 0 2.2 12c0 1.3.3 2.5.9 3.6l-1 3.6 4-1.9c1.2.5 2.5.8 3.9.8a6.6 6.6 0 0 0 1.3-.1A5.6 5.6 0 0 1 10 13.4c0-2.3 2.3-4.2 5.2-4.2.5 0 1 .1 1.5.2a5.9 5.9 0 0 1 3.4-.4l.5-2.4A9.5 9.5 0 0 0 12 2.5zm-3.1 6.3a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6zm6.2 0a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6z" />
-      <path d="M7.6 13.2c0 2.4 3 4.3 6.7 4.3s6.7-1.9 6.7-4.3c0-.3-.1-.7-.2-1l-1.6.6a4.2 4.2 0 0 0-1.5-.3c-.6 0-1.2.1-1.7.3a5.9 5.9 0 0 0-5.4 0 4.2 4.2 0 0 0-1.7-.3c-.5 0-1 .1-1.5.3l-1.6-.6c-.1.3-.2.7-.2 1z" fill="#0d2b1e" />
+      <path d="M7.6 13.2c0 2.4 3 4.3 6.7 4.3s6.7-1.9 6.7-4.3c0-.3-.1-.7-.2-1l-1.6.6a4.2 4.2 0 0 0-1.5-.3c-.6 0-1.2.1-1.7.3a5.9 5.9 0 0 0-5.4 0 4.2 4.2 0 0 0-1.7-.3c-.5 0-1 .1-1.5.3l-1.6-.6c-.1.3-.2.7-.2 1z" fill="#ffffff" />
     </svg>
   );
 }

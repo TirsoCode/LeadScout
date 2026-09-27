@@ -207,13 +207,12 @@ export function HeroCopy() {
   return (
     <div className="mx-auto max-w-3xl text-center">
       <h1 className="font-serif text-4xl font-bold leading-[1.08] tracking-tight sm:text-6xl">
-        Encuentra clientes potenciales.
+        Clientes potenciales que
         <br />
-        <span className="text-accent">Automáticamente.</span>
+        <span className="text-accent">sí que responden.</span>
       </h1>
       <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-ink-2 sm:text-lg">
-        Pega la URL de tu negocio. Analizamos qué vendes, buscamos en LinkedIn y Reddit a quién le
-        duele ese problema y te lo enseñamos con un porcentaje de afinidad.
+        La mayoría envía spam a negocios saturados y no recibe nada. LeadScout encuentra a quienes tienen nuevas necesidades, presupuesto fresco y buscan proveedores ahora mismo.
       </p>
     </div>
   );

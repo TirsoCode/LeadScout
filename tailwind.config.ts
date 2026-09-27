@@ -9,14 +9,18 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Paleta LeadScout (SPEC.md): verde muy oscuro -> verde brillante.
-        bg: "#0d2b1e",
-        "bg-2": "#1e4a30",
-        accent: "#4ade80",
-        "accent-dim": "#22c55e",
-        ink: "#ffffff",
-        "ink-2": "#a3b8a8",
-        line: "#2d5a3d",
+        // Paleta LeadScout en modo claro: fondo blanco y la misma identidad
+        // verde, pero oscurecida lo necesario para que el texto blanco sobre
+        // los botones pase el contraste AA.
+        bg: "#ffffff",
+        "bg-2": "#f4f7f5",
+        // #15803d es el verde más claro que aún da 5:1 con texto blanco, así
+        // que los botones y el texto de acento pasan AA sobre fondo blanco.
+        accent: "#15803d",
+        "accent-dim": "#166534",
+        ink: "#0f1a14",
+        "ink-2": "#4b574f",
+        line: "#dde5e0",
       },
       fontFamily: {
         // Alimentadas por next/font en app/layout.tsx.
@@ -25,8 +29,8 @@ const config: Config = {
         mono: ["ui-monospace", "SFMono-Regular", "monospace"],
       },
       boxShadow: {
-        glow: "0 0 0 1px #2d5a3d, 0 18px 50px -20px rgba(74,222,128,0.35)",
-        card: "0 10px 30px -18px rgba(0,0,0,0.8)",
+        glow: "0 0 0 1px #dde5e0, 0 10px 34px -20px rgba(21,128,61,0.4)",
+        card: "0 1px 3px rgba(15,26,20,0.05), 0 10px 30px -20px rgba(15,26,20,0.25)",
       },
       keyframes: {
         "fade-up": {

@@ -55,7 +55,8 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 - **El límite de 3 mensajes/semana se comprueba en el servidor** (`app/api/messages`). `PATCH` (editar) no lo consume. La semana es ISO y se calcula en UTC.
 - **Aislamiento entre usuarios**: los leads se cargan con `getLeadsForUser(userId)`, nunca por `leadId` suelto. Un lead ajeno devuelve 404.
 - **La navbar abre el modal con `router.push("/?auth=signup")`**, que no remonta el componente. Por eso `ScanExperience` usa `useSearchParams` + `handledRef`; con un `useEffect` de solo montaje el modal no abría y había que recargar.
-- **Nunca lances `npm run build` con `next dev` corriendo**: los dos escriben en `.next` y corrompen el CSS servido (página sin estilos / fondo blanco). Para el build, para el dev server antes.
+- **Cambiar `tailwind.config.ts` no invalida el CSS de `.next`.** El dev server sigue sirviendo las utilities con los valores viejos: tras pasar a fondo blanco, `.text-ink` seguía valiendo `#fff` y el texto quedaba blanco sobre blanco sin error de build. **Solución: parar el dev server, `rm -rf .next`, arrancar.** Si tocas tokens de color, hazlo siempre.
+- **Nunca lances `npm run build` con `next dev` corriendo**: los dos escriben en `.next` y corrompen el CSS servido (página sin estilos). Para el build, para el dev server antes.
 - **`.data/` está en `.gitignore`**: contiene el secret y la base de datos local de desarrollo.
 - **Reddit devuelve 403 desde IPs de datacenter.** Es normal en local; por eso existe `demoLeads`. La etiqueta `live: false` y el badge "Dataset de demostración" son intencionales.
 - **El botón de Google solo se renderiza con Supabase configurado** (`googleEnabled`): sin claves no puede funcionar y preferimos no mostrar un botón muerto.
@@ -63,7 +64,8 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 
 ## Estilo
 
-- Paleta en `tailwind.config.ts`: `bg #0d2b1e`, `bg-2 #1e4a30`, `accent #4ade80`, `line #2d5a3d`, `ink #ffffff`, `ink-2 #a3b8a8`. Sin gradientes ni sombras de color en el hero.
+- Paleta en `tailwind.config.ts`: `bg #ffffff`, `bg-2 #f4f7f5`, `accent #15803d`, `accent-dim #166534`, `line #dde5e0`, `ink #0f1a14`, `ink-2 #4b574f`. Fondo **blanco**; el verde se oscureció a `#15803d` porque es el tono más claro que todavía da 5:1 con texto blanco, y los botones (`text-white` sobre `bg-accent`) y el texto de acento necesitan AA sobre blanco.
 - Títulos en serif (`Playfair Display`), UI en sans (`Inter`); ambas vía `next/font` con variables CSS.
 - Clases reutilizables en `app/globals.css` (`.btn-accent`, `.card`, `.input`, `.badge`, `.pixelated`, `.locked-veil`, `.container-page`).
-- `app/layout.tsx` lleva `backgroundColor` **inline** en `<html>` y `<body>` a propósito: evita el flash blanco si el CSS tarda o queda cacheado.
+- `app/layout.tsx` lleva `backgroundColor` **inline** (`#ffffff`) en `<html>` y `<body>` a propósito: evita el flash si el CSS tarda o queda cacheado.
+- `color-scheme: light` en `globals.css` y en el `viewport`: sin esto el navegador pinta los scrollbars oscuros y los `autofill` en negro.

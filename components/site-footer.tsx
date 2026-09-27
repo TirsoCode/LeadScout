@@ -23,7 +23,7 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
 
 export function SiteFooter() {
   return (
-    <footer className="border-t border-line/70 bg-[#0a2018]">
+    <footer className="border-t border-line/70 bg-bg-2">
       <div className="container-page py-14">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           <div>

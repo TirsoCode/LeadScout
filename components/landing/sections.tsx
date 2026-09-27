@@ -39,7 +39,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="como-funciona" className="border-t border-line/60 bg-[#0a2018] py-20 sm:py-24">
+    <section id="como-funciona" className="border-t border-line/60 bg-bg-2 py-20 sm:py-24">
       <div className="container-page">
         <div className="mx-auto max-w-2xl text-center">
           <span className="badge border-line bg-bg-2 text-ink-2">Cómo funciona</span>
@@ -147,7 +147,7 @@ const FAQS = [
 
 export function Faq() {
   return (
-    <section id="faq" className="border-t border-line/60 bg-[#0a2018] py-20 sm:py-24">
+    <section id="faq" className="border-t border-line/60 bg-bg-2 py-20 sm:py-24">
       <div className="container-page">
         <div className="mx-auto max-w-2xl text-center">
           <span className="badge border-line bg-bg-2 text-ink-2">FAQ</span>

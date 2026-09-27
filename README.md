@@ -75,3 +75,7 @@ npm run test:bg     # background-color computado por el navegador
 Si tocas el CSS y parece que no carga, **no lances `npm run build` con
 `next dev` corriendo**: los dos escriben en `.next` y corrompen el dev server.
 Para el build, para el dev server antes.
+
+Y si cambias colores en `tailwind.config.ts`, ten en cuenta que eso **no
+invalida** el CSS cacheado: para el dev server, `rm -rf .next`, y arranca. Si no,
+el navegador sigue recibiendo las utilities con los valores antiguos.

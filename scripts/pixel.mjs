@@ -105,4 +105,8 @@ const luma = 0.2126 * r + 0.7152 * g + 0.0722 * b;
 console.log(`imagen  : ${file} (${width}x${height}, colorType=${colorType})`);
 console.log(`píxel   : (${targetX},${targetY}) -> rgb(${r}, ${g}, ${b}) ${hex}`);
 console.log(`luma    : ${luma.toFixed(1)} / 255`);
-console.log(`veredicto: ${luma < 90 ? "OSCURO (correcto)" : "CLARO / BLANCO"}`);
+console.log(`tono    : ${luma > 200 ? "blanco" : luma < 90 ? "oscuro" : "medio"}`);
+// El diseño actual es fondo blanco; compara con el token `bg` de
+// tailwind.config.ts. Ajusta EXPECTED si la paleta vuelve a cambiar.
+const EXPECTED = "#ffffff";
+console.log(`esperado: ${EXPECTED} -> ${hex === EXPECTED ? "COINCIDE" : "DISTINTO (revisa tailwind.config.ts)"}`);

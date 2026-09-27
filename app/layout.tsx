@@ -49,20 +49,21 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#0d2b1e",
-  colorScheme: "dark",
+  themeColor: "#ffffff",
+  colorScheme: "light",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     // `bg-bg` + color inline en <html> y <body>: el inline sobrevive aunque el
-    // CSS tarde en cargar o quede cacheado, así que nunca hay flash blanco.
+    // CSS tarde en cargar o quede cacheado, así que nunca hay flash del color
+    // equivocado.
     <html
       lang="es"
       className={`${inter.variable} ${playfair.variable} bg-bg`}
-      style={{ backgroundColor: "#0d2b1e" }}
+      style={{ backgroundColor: "#ffffff" }}
     >
-      <body className="min-h-screen bg-bg font-sans text-ink" style={{ backgroundColor: "#0d2b1e" }}>
+      <body className="min-h-screen bg-bg font-sans text-ink" style={{ backgroundColor: "#ffffff" }}>
         {children}
       </body>
     </html>
