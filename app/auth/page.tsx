@@ -4,10 +4,9 @@ import { getCurrentUser } from "@/lib/auth";
 import { AuthScreen } from "@/components/auth/auth-screen";
 
 export const metadata: Metadata = {
-  // Solo el nombre de la marca: es lo que se lee en la pestaña de Chrome. Un
-  // `title` en string de una página sustituye al del layout y no hereda su
-  // `template`, así que aquí se escribe el valor final tal cual.
-  title: "LeadScout",
+  // `absolute` porque el layout define el template "%s · LeadScout": con un
+  // string normal la pestaña se queda en "LeadScout · LeadScout".
+  title: { absolute: "LeadScout" },
   description: "Inicia sesión o crea tu cuenta para desbloquear tus leads completos.",
   robots: { index: false, follow: false },
 };

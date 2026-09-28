@@ -25,6 +25,35 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
 type Body = { mode?: string; email?: unknown; password?: unknown; fullName?: unknown };
 
+/**
+ * Supabase contesta en inglés; la UI es en español y los tests comprueban los
+ * textos en español. Traducimos los casos que el usuario puede provocar de
+ * verdad y, para lo demás, un mensaje genérico (el original solo al log).
+ */
+function friendlyAuthError(error: { code?: string; message: string }): string {
+  const code = error.code ?? "";
+  const message = error.message.toLowerCase();
+
+  if (code === "user_already_exists" || message.includes("already been registered") || message.includes("already registered")) {
+    return "Ya existe una cuenta con ese email. Prueba a iniciar sesión.";
+  }
+  if (code === "invalid_credentials" || message.includes("invalid login credentials")) {
+    return "No encontramos una cuenta con ese email o la contraseña es incorrecta.";
+  }
+  if (code === "email_not_confirmed" || message.includes("email not confirmed")) {
+    return "Confirma tu email antes de iniciar sesión.";
+  }
+  if (code === "weak_password" || message.includes("password should be")) {
+    return "La contraseña necesita al menos 8 caracteres.";
+  }
+  if (message.includes("rate limit") || message.includes("too many")) {
+    return "Demasiados intentos. Espera un momento.";
+  }
+
+  console.warn("[auth] supabase:", error.code ?? "", error.message);
+  return "No se pudo completar la autenticación.";
+}
+
 async function withSupabase(mode: "signup" | "login", email: string, password: string) {
   const { createServerClient } = await import("@supabase/ssr");
   const cookieStore = cookies();
@@ -48,7 +77,7 @@ async function withSupabase(mode: "signup" | "login", email: string, password: s
     ? await supabase.auth.signUp(credentials)
     : await supabase.auth.signInWithPassword(credentials);
 
-  if (error) return { error: error.message };
+  if (error) return { error: friendlyAuthError({ code: error.code, message: error.message }) };
   if (!data.user?.email) return { error: "No se pudo completar el registro." };
 
   const user: User = {

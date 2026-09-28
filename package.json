@@ -11,6 +11,7 @@
     "test": "bash scripts/e2e.sh",
     "test:ui": "node scripts/ui-flow.mjs",
     "test:bg": "node scripts/check-bg.mjs",
+    "supabase:setup": "node scripts/setup-supabase.mjs",
     "shot": "node scripts/shot.mjs",
     "pixel": "node scripts/pixel.mjs"
   },

@@ -7,10 +7,9 @@ import { Faq, HowItWorks, MessageTeaser, Pricing, Stats } from "@/components/lan
 import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  // Solo el nombre de la marca: es lo que se lee en la pestaña de Chrome. Un
-  // `title` en string de la página sustituye al del layout y no hereda su
-  // `template`, así que aquí se escribe el valor final tal cual.
-  title: "LeadScout",
+  // `absolute` porque el layout define el template "%s · LeadScout": con un
+  // string normal la pestaña se queda en "LeadScout · LeadScout".
+  title: { absolute: "LeadScout" },
   description:
     "Pega la URL de tu negocio y la IA encuentra en LinkedIn y Reddit a personas que necesitan tu servicio, con porcentaje de afinidad incluido.",
 };

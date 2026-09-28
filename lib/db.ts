@@ -2,8 +2,9 @@
  * Capa de datos con dos backends intercambiables:
  *
  *  - **Supabase** (si hay NEXT_PUBLIC_SUPABASE_URL + ANON_KEY): tablas
- *    `users`, `searches`, `leads`, `messages` del SPEC.md. Si falta el service
- *    role key, el esquema se crea con `ensureSchema()` en la primera petición.
+ *    `users`, `searches`, `leads`, `messages`. El esquema vive en
+ *    `supabase/migrations/` (se aplica con `supabase db push`), NO aquí: por
+ *    eso este archivo no lleva DDL.
  *  - **Store local** (sin variables): un único JSON en `.data/leadscout.json`.
  *    development-only, con escrituras serializadas mediante una cola de
  *    promesas para no corromper el archivo.
@@ -271,7 +272,6 @@ export async function claimPreviewForUser(userId: string, searchId: string | nul
 type SupabaseClient = import("@supabase/supabase-js").SupabaseClient;
 
 let supabasePromise: Promise<SupabaseClient> | null = null;
-let schemaEnsured: Promise<void> | null = null;
 
 async function supabaseStore() {
   if (!supabasePromise) {
@@ -286,70 +286,7 @@ async function supabaseStore() {
     })();
   }
   const client = await supabasePromise;
-  await ensureSchema(client);
   return { client, ...(await buildSupabaseStore(client)) };
-}
-
-const SCHEMA_SQL = `
-create table if not exists public.users (
-  id uuid primary key,
-  email text not null unique,
-  created_at timestamptz not null default now()
-);
-create table if not exists public.searches (
-  id text primary key,
-  user_id uuid references public.users(id) on delete cascade,
-  url text not null,
-  business jsonb not null,
-  live boolean not null default false,
-  created_at timestamptz not null default now()
-);
-create table if not exists public.leads (
-  id text primary key,
-  search_id text not null references public.searches(id) on delete cascade,
-  platform text not null,
-  name text not null,
-  title text not null,
-  username text not null,
-  url text not null,
-  community text,
-  snippet text not null,
-  match_score integer not null default 0,
-  reason text not null default '',
-  origin text not null default 'reddit',
-  created_at timestamptz not null default now()
-);
-create table if not exists public.messages (
-  id text primary key,
-  user_id uuid not null references public.users(id) on delete cascade,
-  lead_id text not null,
-  body text not null,
-  created_at timestamptz not null default now(),
-  edited_at timestamptz
-);
-create index if not exists leads_search_id_idx on public.leads(search_id);
-create index if not exists leads_user_search_idx on public.leads(search_id);
-create index if not exists messages_user_created_idx on public.messages(user_id, created_at desc);
-create index if not exists searches_user_created_idx on public.searches(user_id, created_at desc);
-`;
-
-async function ensureSchema(client: SupabaseClient): Promise<void> {
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) return; // sin permiso de DDL
-  if (!schemaEnsured) {
-    schemaEnsured = (async () => {
-      const { error } = await client.rpc("exec_sql", { sql: SCHEMA_SQL });
-      if (error) {
-        // Si no hay la función exec_sql, el esquema se ha creado a mano desde
-        // el panel de Supabase. Lo dejamos pasar con un aviso.
-        console.warn(
-          "[db] no se pudo crear el esquema automáticamente:",
-          error.message,
-          "-> aplica supabase/schema.sql en el panel de Supabase.",
-        );
-      }
-    })();
-  }
-  return schemaEnsured;
 }
 
 function mapSearch(row: Record<string, unknown>): StoredSearch {

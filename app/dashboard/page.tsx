@@ -11,8 +11,9 @@ import { FREE_WEEKLY_MESSAGE_LIMIT } from "@/lib/types";
 import { DashboardClient, type SearchSummary } from "@/components/dashboard/dashboard-client";
 
 export const metadata: Metadata = {
-  // Igual que en la landing: solo la marca, que es lo que se ve en la pestaña.
-  title: "LeadScout",
+  // Igual que en la landing: solo la marca, y `absolute` para que el template
+  // del layout no la duplique.
+  title: { absolute: "LeadScout" },
   description: "Tus leads desbloqueados y el generador de mensajes.",
   robots: { index: false, follow: false },
 };

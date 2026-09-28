@@ -20,7 +20,29 @@ cuanto defines una clave, cambia al servicio real sin tocar código:
 | `NEXT_PUBLIC_SUPABASE_*` | Auth con cookie firmada + scrypt, y base de datos en `.data/leadscout.json`. |
 | — (Reddit siempre) | Si la API pública de Reddit responde, trae los leads reales. Si devuelve 403 (típico en IPs de datacenter) genera un dataset de demostración, marcado con `live: false` y el badge "Dataset de demostración". |
 
-Copia `.env.example` a `.env.local` para activar los servicios reales.
+Copia `.env.example` a `.env.local` para activar los servicios reales. Si vas a
+usar Supabase, mejor `npm run supabase:setup`: pide las claves a la CLI del
+proyecto enlazado y escribe `.env.local` con permisos 600 (la `service_role` no
+debe salir nunca de un archivo del repo).
+
+## Supabase (ya montado en este entorno)
+
+Proyecto `lmxiakrjbeoqgwigmvmx` (Leadscoutapp, West EU), con el esquema aplicado
+y auth funcionando: email + contraseña contra Supabase Auth, y la cookie de
+sesión renovada por `middleware.ts`.
+
+```bash
+npm run supabase:setup          # escribe .env.local con las claves (mode 600)
+supabase db push --linked       # aplica supabase/migrations/ a la nube
+```
+
+Dos cosas que conviene tener presentes:
+
+- El proyecto tiene **`mailer_autoconfirm: true`**: en desarrollo el registro
+  devuelve sesión al instante, sin correo de confirmación. Desactívalo en producción.
+- El botón de Google sigue sin credenciales de Google Cloud. El callback ya está
+  permitido (`http://localhost:3000/auth/callback`); los pasos exactos para
+  activarlo están en `SUPABASE_SETUP_GUIDE.md`.
 
 ## Cómo funciona
 
@@ -35,11 +57,14 @@ Copia `.env.example` a `.env.local` para activar los servicios reales.
 ## Estructura
 
 ```
-app/            rutas: landing, /dashboard, /api/*, /auth/callback
+app/            rutas: landing, /auth, /dashboard, /api/*, /auth/callback
 components/     landing/  dashboard/  auth/
 lib/            scan, crawl, heuristics, openrouter, reddit, message,
                 mask, auth, db, secret, types, utils, api
-scripts/        e2e.sh, ui-flow.mjs, check-bg.mjs, shot.mjs, pixel.mjs
+middleware.ts   refresca la sesión de Supabase (cookies)
+supabase/       config.toml + migrations/ (el esquema que usa lib/db.ts)
+scripts/        e2e.sh, ui-flow.mjs, check-bg.mjs, shot.mjs, pixel.mjs,
+                setup-supabase.mjs
 ```
 
 `lib/db.ts` tiene dos backends (Supabase o JSON local) y `lib/auth.ts` dos

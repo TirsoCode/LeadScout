@@ -12,6 +12,7 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 - `npm run test:bg` — `scripts/check-bg.mjs`: lee el `background-color` **computado** por el navegador
 - `npm run shot -- <url> <salida.png>` — captura de pantalla headless
 - `npm run pixel -- <png> [x] [y]` — decodifica el PNG y dice el color real del píxel (sin dependencias)
+- `npm run supabase:setup` — escribe `.env.local` (600) con las claves del proyecto Supabase enlazado. `-- --force` lo pisa.
 - `npm run build` — build de producción
 
 **Verificación completa = typecheck + lint + `npm test` + `npm run test:ui`.**
@@ -43,10 +44,13 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 
 ### Frontend
 
-- `app/page.tsx` — landing (server). `ScanExperience` va dentro de `<Suspense>` porque usa `useSearchParams`.
+- `app/page.tsx` — landing (server). Redirige los `?auth=...` antiguos a `/auth`.
+- `app/auth/page.tsx` — pantalla de acceso (server): lee `mode`, `err` y `next`, y pasa a `AuthScreen`.
 - `app/dashboard/page.tsx` — server: carga datos y pasa a `DashboardClient`.
 - `components/landing/` — `scan-experience.tsx` (máquina de estados `idle → analyzing → results`), `pixelated-results.tsx` (`LeadRow` es compartido con el dashboard), `analyzing.tsx`, `sections.tsx` (stats, cómo funciona, precios, FAQ, teaser de mensajes).
 - `components/dashboard/` — `leads-table.tsx` (filtros + búsqueda), `message-panel.tsx` (generar/editar/copiar), `dashboard-client.tsx`.
+- `components/auth/auth-screen.tsx` — `/auth` partida en dos: panel de marca verde (`accent-dim`) + formulario. Incluye el toggle de contraseña y el enlace que alterna signup/login.
+- `middleware.ts` — refresca la sesión de Supabase con `getClaims()`. Sin él, los Server Components no pueden renovar el token (no pueden escribir cookies) y la sesión muere a la hora.
 
 ## Gotchas
 
@@ -66,8 +70,11 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 - **`.data/` está en `.gitignore`**: contiene el secret y la base de datos local de desarrollo.
 - **Reddit devuelve 403 desde IPs de datacenter.** Es normal en local; por eso existe `demoLeads`. La etiqueta `live: false` y el badge "Dataset de demostración" son intencionales.
 - **El botón de Google se muestra siempre**, tenga o no Supabase configurado. Si faltan `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `handleGoogle` (en `components/auth/auth-screen.tsx`) lo explica en la propia pantalla en vez de dejar un botón muerto. Ya no existe la prop `googleEnabled`: si la añades de vuelta para ocultarlo, recuerda que es una decisión de producto, no un detalle técnico.
-- **El `title` de cada página se escribe entero y a mano.** Un `title` en string de una página sustituye al del `layout` y **no** hereda su `template` (`"%s · LeadScout"`), así que la pestaña de Chrome se queda sin marca si no la incluyas. Hoy ambas páginas usan `"LeadScout"`, que es lo que el usuario quiere ver arriba.
-- `metadata` de `/dashboard` es `robots: noindex`. Las páginas son dinámicas (leen cookies), nada de `output: "export"`.
+- **El `title` de cada página se escribe entero y a mano, y con `absolute`.** El `layout` define el `template` `"%s · LeadScout"`, y ese template **sí** se aplica al `title` de una página: con `title: "LeadScout"` la pestaña se quedaba en "LeadScout · LeadScout". Por eso las tres páginas usan `title: { absolute: "LeadScout" }`.
+- `metadata` de `/dashboard` y `/auth` es `robots: noindex`. Las páginas son dinámicas (leen cookies), nada de `output: "export"`.
+- **El esquema de la BD vive en `supabase/migrations/`, no en `lib/db.ts`.** Antes había un `ensureSchema()` que intentaba crear las tablas con un RPC `exec_sql` que no existía; se eliminó. Se aplica con `supabase db push --linked`. Los ids de `searches`/`leads`/`messages` son `text` (los pone `randomId()`), no `uuid`: no los cambies sin tocar los `map*` de `lib/db.ts`.
+- **Supabase ya está configurado en este entorno** (proyecto `lmxiakrjbeoqgwigmvmx`): `.env.local` existe con la `service_role` y el esquema está aplicado, así que `npm test` y `npm run test:ui` corren contra la nube, no contra `.data/`. Para volver al modo local, renombra `.env.local` y reinicia. Las claves se regeneran con `npm run supabase:setup` (nunca a mano, nunca al repo).
+- **`mailer_autoconfirm` está en `true` en el proyecto** (necesario en dev para que el registro devuelva sesión sin correo). Al desplegar en producción, desactívalo y pon un SMTP real.
 
 ## Estilo
 
