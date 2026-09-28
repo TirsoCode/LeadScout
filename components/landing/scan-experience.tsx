@@ -13,14 +13,7 @@ type Phase = "idle" | "analyzing" | "results";
 
 const EXAMPLES = ["stripe.com", "fiverr.com", "awebdesigner.com"];
 
-export function ScanExperience({
-  signedIn,
-  googleEnabled = false,
-}: {
-  signedIn: boolean;
-  /** Con Supabase configurado se ofrece también el acceso con Google. */
-  googleEnabled?: boolean;
-}) {
+export function ScanExperience({ signedIn }: { signedIn: boolean }) {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -187,7 +180,6 @@ export function ScanExperience({
       <AuthModal
         open={authOpen !== null}
         mode={authOpen ?? "signup"}
-        googleEnabled={googleEnabled}
         initialError={authError}
         onClose={() => {
           setAuthOpen(null);

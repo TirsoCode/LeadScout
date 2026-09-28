@@ -59,7 +59,8 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 - **Nunca lances `npm run build` con `next dev` corriendo**: los dos escriben en `.next` y corrompen el CSS servido (página sin estilos). Para el build, para el dev server antes.
 - **`.data/` está en `.gitignore`**: contiene el secret y la base de datos local de desarrollo.
 - **Reddit devuelve 403 desde IPs de datacenter.** Es normal en local; por eso existe `demoLeads`. La etiqueta `live: false` y el badge "Dataset de demostración" son intencionales.
-- **El botón de Google solo se renderiza con Supabase configurado** (`googleEnabled`): sin claves no puede funcionar y preferimos no mostrar un botón muerto.
+- **El botón de Google se muestra siempre**, tenga o no Supabase configurado. Si faltan `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `handleGoogle` (en `components/auth/auth-modal.tsx`) lo explica en el modal en vez de dejar un botón muerto. Ya no existe la prop `googleEnabled`: si la añades de vuelta para ocultarlo, recuerda que es una decisión de producto, no un detalle técnico.
+- **El `title` de cada página se escribe entero y a mano.** Un `title` en string de una página sustituye al del `layout` y **no** hereda su `template` (`"%s · LeadScout"`), así que la pestaña de Chrome se queda sin marca si no la incluyas. Hoy ambas páginas usan `"LeadScout"`, que es lo que el usuario quiere ver arriba.
 - `metadata` de `/dashboard` es `robots: noindex`. Las páginas son dinámicas (leen cookies), nada de `output: "export"`.
 
 ## Estilo

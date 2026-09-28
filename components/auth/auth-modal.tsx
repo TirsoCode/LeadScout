@@ -16,15 +16,12 @@ type Mode = "signup" | "login";
 export function AuthModal({
   open,
   mode: initialMode,
-  googleEnabled = false,
   initialError = null,
   onClose,
   onSuccess,
 }: {
   open: boolean;
   mode: Mode;
-  /** Hay credenciales de Supabase: se puede ofrecer Google. */
-  googleEnabled?: boolean;
   /** Error que viene de la URL tras un OAuth fallido. */
   initialError?: string | null;
   onClose: () => void;
@@ -132,25 +129,24 @@ export function AuthModal({
         </p>
 
         <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-          {googleEnabled ? (
-            <>
-              <button
-                type="button"
-                onClick={handleGoogle}
-                disabled={pending}
-                className="btn w-full !border-line !bg-white !text-[#1f1f1f] hover:!bg-[#f1f1f1]"
-              >
-                <IconGoogle className="h-4 w-4" />
-                Continuar con Google
-              </button>
+          {/* El botón de Google se muestra siempre, tenga o no Supabase
+              configurado. Si faltan las credenciales, `handleGoogle` lo explica
+              en vez de dejar un botón que no hace nada. */}
+          <button
+            type="button"
+            onClick={handleGoogle}
+            disabled={pending}
+            className="btn w-full !border-line !bg-white !text-[#1f1f1f] hover:!bg-[#f1f1f1]"
+          >
+            <IconGoogle className="h-4 w-4" />
+            Continuar con Google
+          </button>
 
-              <div className="flex items-center gap-3 py-1">
-                <span className="h-px flex-1 bg-line" />
-                <span className="text-[11px] uppercase tracking-wider text-ink-2/70">o con email</span>
-                <span className="h-px flex-1 bg-line" />
-              </div>
-            </>
-          ) : null}
+          <div className="flex items-center gap-3 py-1">
+            <span className="h-px flex-1 bg-line" />
+            <span className="text-[11px] uppercase tracking-wider text-ink-2/70">o con email</span>
+            <span className="h-px flex-1 bg-line" />
+          </div>
 
           <div>
             <label htmlFor="auth-email" className="label">

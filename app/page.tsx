@@ -4,10 +4,13 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { HeroCopy, ScanExperience } from "@/components/landing/scan-experience";
 import { Faq, HowItWorks, MessageTeaser, Pricing, Stats } from "@/components/landing/sections";
-import { getCurrentUser, usingSupabase } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
-  title: "Encuentra clientes potenciales para tu negocio",
+  // Solo el nombre de la marca: es lo que se lee en la pestaña de Chrome. Un
+  // `title` en string de la página sustituye al del layout y no hereda su
+  // `template`, así que aquí se escribe el valor final tal cual.
+  title: "LeadScout",
   description:
     "Pega la URL de tu negocio y la IA encuentra en LinkedIn y Reddit a personas que necesitan tu servicio, con porcentaje de afinidad incluido.",
 };
@@ -30,7 +33,7 @@ export default async function LandingPage() {
               {/* Suspense: ScanExperience usa useSearchParams para abrir el
                   modal cuando la navbar navega a /?auth=signup. */}
               <Suspense fallback={<div className="mx-auto h-24 w-full max-w-2xl" />}>
-                <ScanExperience signedIn={Boolean(user)} googleEnabled={usingSupabase()} />
+                <ScanExperience signedIn={Boolean(user)} />
               </Suspense>
             </div>
 

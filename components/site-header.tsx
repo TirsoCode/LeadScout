@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Logo } from "@/components/icons";
+import { IconPaperPlane, Logo } from "@/components/icons";
 
 export function SiteHeader() {
   const router = useRouter();
@@ -24,6 +24,7 @@ export function SiteHeader() {
             Sign in
           </button>
           <button type="button" onClick={() => router.push("/?auth=signup")} className="btn-accent !px-4 !py-2">
+            <IconPaperPlane className="h-4 w-4" />
             Sign up
           </button>
         </nav>

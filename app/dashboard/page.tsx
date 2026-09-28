@@ -11,7 +11,8 @@ import { FREE_WEEKLY_MESSAGE_LIMIT } from "@/lib/types";
 import { DashboardClient, type SearchSummary } from "@/components/dashboard/dashboard-client";
 
 export const metadata: Metadata = {
-  title: "Tu dashboard",
+  // Igual que en la landing: solo la marca, que es lo que se ve en la pestaña.
+  title: "LeadScout",
   description: "Tus leads desbloqueados y el generador de mensajes.",
   robots: { index: false, follow: false },
 };

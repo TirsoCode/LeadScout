@@ -119,6 +119,26 @@ export function IconLogout({ className = "h-4 w-4" }: IconProps) {
   );
 }
 
+/** Mostrar/ocultar contraseña en la pantalla de acceso. */
+export function IconEye({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M2.5 12S6.3 5.5 12 5.5 21.5 12 21.5 12 17.7 18.5 12 18.5 2.5 12 2.5 12z" strokeLinejoin="round" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+export function IconEyeOff({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path d="M9.9 5.8A9.6 9.6 0 0 1 12 5.5c5.7 0 9.5 6.5 9.5 6.5a17 17 0 0 1-3.2 4M6.4 7.6A16.8 16.8 0 0 0 2.5 12S6.3 18.5 12 18.5c1.5 0 2.8-.4 4-1" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M10 10a3 3 0 0 0 4.2 4.2" strokeLinecap="round" />
+      <path d="M4 4l16 16" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconGoogle({ className = "h-4 w-4" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" aria-hidden="true">
@@ -156,6 +176,15 @@ export function IconLinkedIn({ className = "h-4 w-4" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M20.4 2H3.6A1.6 1.6 0 0 0 2 3.6v16.8A1.6 1.6 0 0 0 3.6 22h16.8a1.6 1.6 0 0 0 1.6-1.6V3.6A1.6 1.6 0 0 0 20.4 2zM8 19H5V9.5h3V19zM6.5 8.1a1.8 1.8 0 1 1 0-3.5 1.8 1.8 0 0 1 0 3.5zM19 19h-3v-4.6c0-1.1 0-2.5-1.5-2.5s-1.8 1.2-1.8 2.4V19h-3V9.5h2.9v1.3h.04a3.2 3.2 0 0 1 2.86-1.6c3.1 0 3.6 2 3.6 4.6V19z" />
+    </svg>
+  );
+}
+
+export function IconPaperPlane({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M22 2L11 13" />
+      <path d="M22 2l-7 20-4-9-9-4 20-7z" />
     </svg>
   );
 }
