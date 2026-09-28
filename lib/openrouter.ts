@@ -5,6 +5,11 @@
  * nivel (`analyzeBusiness`, `scoreLeads`, `generateMessage`) caen automaticamente
  * en los equivalentes heuristicos de lib/heuristics.ts, de modo que la app
  * funciona completa en local sin credenciales.
+ *
+ * Además, si los créditos se agotan (HTTP 402), la clave deja de valer (401) o
+ * la API nos limita (429), `hasOpenRouter()` se apaga durante un rato y todo
+ * cae directo al modo sin API: ni tiempo muerto esperando el error ni llamadas
+ * encadenadas que sigan gastando/quemando el límite.
  */
 
 import type { BusinessProfile, Lead } from "./types";
@@ -18,8 +23,43 @@ const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
 
 export const DEFAULT_MODEL = process.env.OPENROUTER_MODEL || "meta-llama/llama-3.1-8b-instruct";
 
+// --- Circuit breaker --------------------------------------------------------
+// Como los *Safe de este módulo capturan cualquier error, la app NUNCA se rompe
+// por la API: lo que aporta esto es no seguir llamando a un servicio que ya
+// sabemos que no va a responder (créditos agotados, rate limit, key inválida).
+const QUOTA_PAUSE_MS = 15 * 60 * 1000; // créditos agotados: 15 min sin API
+const RATE_PAUSE_MS = 2 * 60 * 1000;   // rate limit: 2 min
+const AUTH_PAUSE_MS = 10 * 60 * 1000;  // clave inválida: 10 min
+
+let openrouterPausedUntil = 0;
+
+export function openrouterPaused(): boolean {
+  return Date.now() < openrouterPausedUntil;
+}
+
+/** Para tests o para desbloquear la API a mano (p.ej. tras recargar créditos). */
+export function resetOpenRouterPause(): void {
+  openrouterPausedUntil = 0;
+}
+
+function pauseOpenRouter(ms: number): void {
+  const until = Date.now() + ms;
+  if (until > openrouterPausedUntil) openrouterPausedUntil = until;
+}
+
+/** Devuelve cuánto tiempo pausar la API según la respuesta de OpenRouter. */
+function openRouterPauseFor(status: number, body: string): number {
+  const text = body.toLowerCase();
+  if (status === 402 || text.includes("insufficient quota") || text.includes("insufficient_quota")) {
+    return QUOTA_PAUSE_MS;
+  }
+  if (status === 401 || text.includes("invalid api key")) return AUTH_PAUSE_MS;
+  if (status === 429) return RATE_PAUSE_MS;
+  return 0;
+}
+
 export function hasOpenRouter(): boolean {
-  return Boolean(process.env.OPENROUTER_API_KEY);
+  return Boolean(process.env.OPENROUTER_API_KEY) && !openrouterPaused();
 }
 
 /** Llama al modelo y devuelve texto plano. Lanza si la API falla. */
@@ -53,6 +93,19 @@ async function complete(
 
   if (!res.ok) {
     const detail = await res.text().catch(() => "");
+    const pause = openRouterPauseFor(res.status, detail);
+    if (pause > 0) {
+      const why =
+        pause === QUOTA_PAUSE_MS
+          ? "créditos agotados"
+          : pause === AUTH_PAUSE_MS
+            ? "clave inválida"
+            : "rate limit";
+      console.warn(
+        `[openrouter] ${why} (${res.status}): sin API durante ${Math.round(pause / 60000)} min, usando modo sin API.`,
+      );
+      pauseOpenRouter(pause);
+    }
     throw new Error(`OpenRouter ${res.status}: ${detail.slice(0, 200)}`);
   }
 

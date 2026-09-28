@@ -1,19 +1,23 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Playfair_Display } from "next/font/google";
+import localFont from "next/font/local";
 import "./globals.css";
 
-const inter = Inter({
-  subsets: ["latin"],
+// Fuentes auto-contenidas en app/fonts/: el build no depende de Google Fonts,
+// así que nunca falla por red en Vercel (los builds remotos no siempre llegan
+// a fonts.googleapis.com).
+const inter = localFont({
+  src: "./fonts/Inter-Variable.ttf",
   variable: "--font-inter",
   display: "swap",
+  weight: "100 900",
 });
 
 // Título en serif, igual que ProfScout (SPEC.md).
-const playfair = Playfair_Display({
-  subsets: ["latin"],
+const playfair = localFont({
+  src: "./fonts/PlayfairDisplay-Variable.ttf",
   variable: "--font-playfair",
   display: "swap",
-  weight: ["400", "500", "600", "700"],
+  weight: "400 900",
 });
 
 export const metadata: Metadata = {
