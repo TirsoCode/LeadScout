@@ -1,6 +1,6 @@
 "use client";
 
-import { IconArrow, IconLock, IconReddit, IconTarget } from "@/components/icons";
+import { IconArrow, IconExternal, IconLock, IconReddit, IconTarget } from "@/components/icons";
 import { isUnlockedLead, type ScanResponse } from "@/lib/api";
 import type { MaskedLead } from "@/lib/mask";
 import type { Lead } from "@/lib/types";
@@ -78,15 +78,31 @@ export function LeadRow({
           <p className="mt-1.5 line-clamp-2 text-xs text-ink-2/60">{snippet}</p>
         ) : null}
 
-        {unlocked && onGenerate ? (
-          <button
-            type="button"
-            onClick={() => onGenerate(lead)}
-            disabled={generating}
-            className="btn-ghost mt-3 !px-3.5 !py-1.5 !text-xs"
-          >
-            {generating ? "Generando…" : "Generate message"}
-          </button>
+        {unlocked ? (
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            {onGenerate ? (
+              <button
+                type="button"
+                onClick={() => onGenerate(lead)}
+                disabled={generating}
+                className="btn-ghost !px-3.5 !py-1.5 !text-xs"
+              >
+                {generating ? "Generando…" : "Mensaje"}
+              </button>
+            ) : null}
+            {lead.url ? (
+              <a
+                href={lead.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn-ghost !px-3.5 !py-1.5 !text-xs"
+                title="Abrir el post original en Reddit"
+              >
+                <IconExternal className="h-3.5 w-3.5" />
+                Abrir en Reddit
+              </a>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

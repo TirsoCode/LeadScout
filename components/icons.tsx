@@ -120,6 +120,27 @@ export function IconSearch({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
+/** Enlace externo: flecha que sale de un recuadro. */
+export function IconExternal({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+      <path d="M14 4h6v6" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M20 4l-9 9" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M19 13v5a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+/** Actualizar / buscar más: flecha circular. */
+export function IconRefresh({ className = "h-4 w-4" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <path d="M20 11a8.1 8.1 0 0 0-15.5-2M4 4v5h5" />
+      <path d="M4 13a8.1 8.1 0 0 0 15.5 2M20 20v-5h-5" />
+    </svg>
+  );
+}
+
 export function IconMessage({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">

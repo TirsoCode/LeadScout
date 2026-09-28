@@ -3,12 +3,15 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { api } from "@/lib/api";
+import { api, ApiErrorResponse, isUnlockedLead } from "@/lib/api";
 import type { Lead, Message } from "@/lib/types";
 import type { MaskedLead } from "@/lib/mask";
 import { LeadsTable } from "@/components/dashboard/leads-table";
 import { MessagePanel, type Quota } from "@/components/dashboard/message-panel";
-import { IconLogout, IconSparkle, IconTarget } from "@/components/icons";
+import { SearchBox, type ScannedResult } from "@/components/dashboard/search-box";
+import { SearchHistory } from "@/components/dashboard/search-history";
+import { BulkCopyButton } from "@/components/dashboard/bulk-actions";
+import { IconCheck, IconLogout, IconTarget } from "@/components/icons";
 
 export type SearchSummary = {
   id: string;
@@ -21,9 +24,18 @@ export type SearchSummary = {
   topScore: number;
 };
 
+/** Clave de deduplicación de un lead: la URL del post o título+comunidad. */
+function leadKey(lead: Lead): string {
+  return lead.url ? lead.url.split("?")[0] : `${lead.title}|${lead.community ?? ""}`;
+}
+
 /**
  * Dashboard (SPEC.md, paso 6): leads desbloqueados, filtros, cuota de mensajes
- * y panel lateral para generar el mensaje de cada lead.
+ * y panel lateral para generar el mensaje de cada lead. Además:
+ * - nueva búsqueda sin salir del panel,
+ * - "buscar más leads" por web analizada (re-scan con dedup),
+ * - historial de búsquedas,
+ * - copiar todos los mensajes de golpe.
  */
 export function DashboardClient({
   userEmail,
@@ -40,12 +52,14 @@ export function DashboardClient({
 }) {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
-  const [searches] = useState(initialSearches);
+  const [searches, setSearches] = useState<SearchSummary[]>(initialSearches);
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [quota, setQuota] = useState<Quota>(initialQuota);
   const [activeLead, setActiveLead] = useState<Lead | null>(null);
   const [generatingId, setGeneratingId] = useState<string | null>(null);
   const [selectedSearch, setSelectedSearch] = useState<string>("all");
+  const [findMoreId, setFindMoreId] = useState<string | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
 
   const visible = useMemo(
     () => (selectedSearch === "all" ? leads : leads.filter((lead) => lead.searchId === selectedSearch)),
@@ -58,6 +72,92 @@ export function DashboardClient({
     await api.logout().catch(() => undefined);
     router.refresh();
     router.push("/");
+  }
+
+  /** Nueva búsqueda desde el panel: mezcla los leads y crea su entrada en el historial. */
+  function handleScanned(result: ScannedResult) {
+    setNotice(null);
+
+    const incoming = result.leads
+      .filter(isUnlockedLead)
+      .map((lead) => ({ ...lead, searchId: result.searchId }));
+    const seen = new Set(leads.map(leadKey));
+    const fresh = incoming.filter((lead) => !seen.has(leadKey(lead)));
+
+    const summary: SearchSummary = {
+      id: result.searchId,
+      url: result.business.url,
+      live: result.live,
+      createdAt: result.createdAt,
+      businessName: result.business.businessName,
+      service: result.business.service,
+      leadCount: result.leads.length,
+      topScore: result.leads.reduce((max, lead) => Math.max(max, lead.matchScore), 0),
+    };
+
+    setLeads((current) => {
+      const seenCurrent = new Set(current.map(leadKey));
+      return [...fresh.filter((lead) => !seenCurrent.has(leadKey(lead))), ...current];
+    });
+    setSearches((current) => [summary, ...current.filter((search) => search.id !== summary.id)]);
+    setSelectedSearch(result.searchId);
+
+    if (fresh.length === 0) {
+      setNotice(`Ya tenías esos leads de ${result.business.businessName}. Se añadió al historial.`);
+    }
+  }
+
+  /** "Buscar más leads" sobre una web ya analizada: re-scan + dedup contra sus leads. */
+  async function handleFindMore(search: SearchSummary) {
+    if (findMoreId === search.id) return;
+
+    setFindMoreId(search.id);
+    setNotice(null);
+
+    try {
+      const result = await api.scan(search.url);
+      const incoming = result.leads
+        .filter(isUnlockedLead)
+        .map((lead) => ({ ...lead, searchId: search.id }));
+      const existing = new Set(leads.filter((lead) => lead.searchId === search.id).map(leadKey));
+      const fresh = incoming.filter((lead) => !existing.has(leadKey(lead)));
+
+      if (fresh.length === 0) {
+        setNotice(`No hay leads nuevos para ${search.businessName}. Prueba otra vez más tarde.`);
+      } else {
+        setLeads((current) => {
+          const seenCurrent = new Set(current.map(leadKey));
+          return [...fresh.filter((lead) => !seenCurrent.has(leadKey(lead))), ...current];
+        });
+        setSearches((current) =>
+          current.map((item) =>
+            item.id === search.id
+              ? {
+                  ...item,
+                  leadCount: item.leadCount + fresh.length,
+                  topScore: Math.max(item.topScore, ...fresh.map((lead) => lead.matchScore)),
+                }
+              : item,
+          ),
+        );
+        setSelectedSearch(search.id);
+        setNotice(
+          `Encontrados ${fresh.length} lead${fresh.length === 1 ? "" : "s"} nuevo${fresh.length === 1 ? "" : "s"} para ${search.businessName}.`,
+        );
+      }
+    } catch (err) {
+      setNotice(
+        err instanceof ApiErrorResponse ? err.message : "No se pudo buscar más leads.",
+      );
+    } finally {
+      setFindMoreId(null);
+    }
+  }
+
+  /** Copia masiva: el cliente del botón actualiza mensajes y cuota con cada generación. */
+  function handleMessageGenerated(message: Message, nextQuota: Quota) {
+    setMessages((current) => [message, ...current.filter((item) => item.id !== message.id)]);
+    setQuota(nextQuota);
   }
 
   const bestScore = leads.reduce((max, lead) => Math.max(max, lead.matchScore), 0);
@@ -98,17 +198,29 @@ export function DashboardClient({
             <p className="mt-2 text-sm text-ink-2">
               {leads.length > 0
                 ? `${hotLeads} por encima del 85% de afinidad · mejor match ${bestScore}%`
-                : "Analiza una web desde la portada para empezar."}
+                : "Pega la URL de tu negocio aquí abajo para empezar."}
             </p>
           </div>
 
-          <div className="flex gap-2">
-            <Link href="/#top" className="btn-accent">
-              <IconSparkle className="h-4 w-4" />
-              Analizar otra web
-            </Link>
+          <div className="flex flex-col items-stretch gap-2 sm:items-end">
+            <BulkCopyButton
+              leads={visible}
+              messages={messages}
+              onGenerated={handleMessageGenerated}
+            />
           </div>
         </div>
+
+        {/* Aviso de las acciones (nueva búsqueda / buscar más) */}
+        {notice ? (
+          <p className="mt-4 flex items-center gap-1.5 rounded-xl border border-accent/40 bg-accent/10 px-4 py-3 text-sm text-accent">
+            <IconCheck className="h-4 w-4 shrink-0" />
+            {notice}
+          </p>
+        ) : null}
+
+        {/* Nueva búsqueda sin salir del panel */}
+        <SearchBox onScanned={handleScanned} />
 
         {/* Cuota de mensajes (de momento ilimitados) */}
         <div className="card mt-6 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
@@ -141,48 +253,23 @@ export function DashboardClient({
           )}
         </div>
 
-        {/* Selector de búsqueda, si el usuario ha analizado varias webs */}
-        {searches.length > 1 ? (
-          <div className="mt-6 flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => setSelectedSearch("all")}
-              className={
-                selectedSearch === "all"
-                  ? "btn-accent !px-3.5 !py-1.5 !text-xs"
-                  : "btn-ghost !px-3.5 !py-1.5 !text-xs"
-              }
-            >
-              Todas
-            </button>
-            {searches.map((search) => (
-              <button
-                key={search.id}
-                type="button"
-                onClick={() => setSelectedSearch(search.id)}
-                className={
-                  selectedSearch === search.id
-                    ? "btn-accent !px-3.5 !py-1.5 !text-xs"
-                    : "btn-ghost !px-3.5 !py-1.5 !text-xs"
-                }
-              >
-                {search.businessName} ({search.leadCount})
-              </button>
-            ))}
-          </div>
-        ) : null}
+        {/* Historial de búsquedas */}
+        <SearchHistory
+          searches={searches}
+          selected={selectedSearch}
+          onSelect={setSelectedSearch}
+          findMoreId={findMoreId}
+          onFindMore={handleFindMore}
+        />
 
         <div className="mt-6">
           {leads.length === 0 ? (
             <div className="card p-12 text-center">
               <p className="font-serif text-xl font-semibold">Sin leads todavía</p>
               <p className="mx-auto mt-2 max-w-md text-sm text-ink-2">
-                Vuelve a la portada, pega la URL de tu negocio y en segundos verás los leads
+                Pega la URL de tu negocio en el buscador de arriba y en segundos verás los leads
                 desbloqueados en este panel.
               </p>
-              <Link href="/#top" className="btn-accent mt-6">
-                Buscar mis leads
-              </Link>
             </div>
           ) : (
             <LeadsTable
