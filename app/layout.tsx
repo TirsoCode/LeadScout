@@ -17,7 +17,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://leadscout.vercel.app"),
+  metadataBase: new URL("https://leadscoutapp.vercel.app"),
   title: {
     default: "LeadScout — Encuentra clientes potenciales automáticamente",
     template: "%s · LeadScout",
@@ -36,7 +36,7 @@ export const metadata: Metadata = {
     description:
       "Pega la URL de tu negocio y descubre quién necesita tu servicio, en Reddit.",
     type: "website",
-    url: "https://leadscout.vercel.app",
+    url: "https://leadscoutapp.vercel.app",
     siteName: "LeadScout",
   },
   twitter: {

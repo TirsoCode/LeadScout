@@ -17,7 +17,7 @@ export type PageContent = {
 };
 
 const UA =
-  "Mozilla/5.0 (compatible; LeadScoutBot/0.1; +https://leadscout.vercel.app) AppleWebKit/537.36";
+  "Mozilla/5.0 (compatible; LeadScoutBot/0.1; +https://leadscoutapp.vercel.app) AppleWebKit/537.36";
 
 /** Bloquea IPs privadas/localhost para evitar SSRF hacia la red interna. */
 function isPrivateHost(hostname: string): boolean {

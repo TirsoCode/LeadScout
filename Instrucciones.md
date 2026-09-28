@@ -166,7 +166,7 @@ Por ahora todo gratis. El objetivo es conseguir usuarios y validar que la gente 
 
 **LeadScout** — Simple, directo, fácil de recordar. Dice exactamente lo que hace.
 
-Deploy en Vercel. Dominio tipo `leadscout.vercel.app` para empezar, luego si funciona se compra el `.com`.
+Deploy en Vercel. Dominio tipo `leadscoutapp.vercel.app` para empezar, luego si funciona se compra el `.com`.
 
 ---
 
