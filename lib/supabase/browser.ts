@@ -4,12 +4,17 @@
  * Solo se usa para el login con Google (el email/password va por API route).
  * Si no hay variables de entorno devuelve null y la UI avisa en vez de dejar
  * un botón muerto.
+ *
+ * El bundle de Supabase se carga CON import diferido para no descargarlo si
+ * las claves no existen; la carga ocurre al primer clic y `handleGoogle` debe
+ * ESPERARLA (getBrowserSupabaseAsync) — si no, el primer clic fallaba con
+ * "no disponible" y el segundo funcionaba.
  */
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 let client: SupabaseClient | null = null;
-let attempted = false;
+let clientPromise: Promise<SupabaseClient | null> | null = null;
 
 export function supabaseEnabled(): boolean {
   return Boolean(
@@ -17,22 +22,34 @@ export function supabaseEnabled(): boolean {
   );
 }
 
-export function getBrowserSupabase(): SupabaseClient | null {
-  if (!supabaseEnabled()) return null;
-  if (client || attempted) return client;
+function loadClient(): Promise<SupabaseClient | null> {
+  if (!supabaseEnabled()) return Promise.resolve(null);
+  if (clientPromise) return clientPromise;
 
-  attempted = true;
   // Import diferido: si no hay claves, nunca se carga el bundle de Supabase.
-  void import("@supabase/ssr").then(({ createBrowserClient }) => {
-    client = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    );
-  });
+  clientPromise = import("@supabase/ssr")
+    .then(({ createBrowserClient }) => {
+      client = createBrowserClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      );
+      return client;
+    })
+    .catch(() => null);
+  return clientPromise;
+}
 
-  // La primera llamada devuelve null mientras se carga; para el botón de
-  // Google solo necesitamos saber que está habilitado, y el usuario tarda
-  // más de un frame en poder hacer clic.
+/**
+ * Espera (si hace falta) a que el cliente esté listo. Esta es la puerta que
+ * usa el botón de Google: el primer clic carga el bundle y devuelve el
+ * cliente sin el falso negativo de "providers no disponible".
+ */
+export async function getBrowserSupabaseAsync(): Promise<SupabaseClient | null> {
+  return loadClient();
+}
+
+/** Síncrono: útil tras la carga; devuelve null si aún no está listo. */
+export function getBrowserSupabase(): SupabaseClient | null {
   return client;
 }
 

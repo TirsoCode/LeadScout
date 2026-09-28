@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, ApiErrorResponse } from "@/lib/api";
-import { getBrowserSupabase, googleProviderEnabled } from "@/lib/supabase/browser";
+import { getBrowserSupabaseAsync, googleProviderEnabled } from "@/lib/supabase/browser";
 import { IconEye, IconEyeOff, IconGoogle, IconSpinner, Logo } from "@/components/icons";
 
 type Mode = "signup" | "login";
@@ -84,7 +84,9 @@ export function AuthScreen({
   async function handleGoogle() {
     setError(null);
     setPending(true);
-    const supabase = getBrowserSupabase();
+    // Espera al cliente (import diferido de Supabase): el primer clic no debe
+    // fallar por "no disponible" mientras carga el bundle.
+    const supabase = await getBrowserSupabaseAsync();
     if (!supabase) {
       setError(
         "El acceso con Google no está disponible. Usa el email y la contraseña.",
