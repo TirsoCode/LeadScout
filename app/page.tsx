@@ -11,7 +11,7 @@ export const metadata: Metadata = {
   // string normal la pestaña se queda en "LeadScout · LeadScout".
   title: { absolute: "LeadScout" },
   description:
-    "Pega la URL de tu negocio y la IA encuentra en LinkedIn y Reddit a personas que necesitan tu servicio, con porcentaje de afinidad incluido.",
+    "Pega la URL de tu negocio y la IA encuentra en Reddit a personas que necesitan tu servicio, con porcentaje de afinidad incluido.",
 };
 
 export const dynamic = "force-dynamic";
@@ -35,7 +35,7 @@ export default async function LandingPage({
 
   return (
     <div className="flex min-h-screen flex-col">
-      <SiteHeader />
+      <SiteHeader userEmail={user?.email} />
 
       <main className="flex-1">
         {/* Hero: fondo verde oscuro liso, sin gradientes (SPEC.md) */}

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { api, ApiErrorResponse } from "@/lib/api";
-import { getBrowserSupabase } from "@/lib/supabase/browser";
+import { getBrowserSupabase, googleProviderEnabled } from "@/lib/supabase/browser";
 import { IconEye, IconEyeOff, IconGoogle, IconSpinner, Logo } from "@/components/icons";
 
 type Mode = "signup" | "login";
@@ -87,7 +87,17 @@ export function AuthScreen({
     const supabase = getBrowserSupabase();
     if (!supabase) {
       setError(
-        "El acceso con Google necesita las credenciales de Supabase (NEXT_PUBLIC_SUPABASE_URL y NEXT_PUBLIC_SUPABASE_ANON_KEY).",
+        "El acceso con Google no está disponible. Usa el email y la contraseña.",
+      );
+      setPending(false);
+      return;
+    }
+    // Sin este chequeo, si el proveedor está apagado en el proyecto el
+    // navegador navega igual y Supabase pinta un 400 JSON en su propio
+    // dominio: el usuario sale de la app sin entender nada.
+    if (!(await googleProviderEnabled())) {
+      setError(
+        "El acceso con Google todavía no está habilitado en este proyecto. Usa el email y la contraseña.",
       );
       setPending(false);
       return;
@@ -127,7 +137,7 @@ export function AuthScreen({
             Clientes potenciales que sí que responden.
           </h2>
           <p className="mt-5 max-w-md text-base leading-relaxed text-white/75">
-            Pega la web de tu negocio y la IA encuentra en LinkedIn y Reddit a quienes tienen nuevas
+            Pega la web de tu negocio y la IA encuentra en Reddit a quienes tienen nuevas
             necesidades y buscan proveedores ahora mismo, con su porcentaje de afinidad incluido.
           </p>
         </div>
@@ -216,7 +226,7 @@ export function AuthScreen({
                 aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
                 className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-1.5 text-ink-2 transition-colors hover:text-ink"
               >
-                {visible ? <IconEyeOff /> : <IconEye />}
+                {visible ? <IconEye /> : <IconEyeOff />}
               </button>
             </div>
 
@@ -248,7 +258,7 @@ export function AuthScreen({
 
           {mode === "signup" ? (
             <p className="mt-4 text-center text-xs leading-relaxed text-ink-2/70">
-              Leads y búsquedas ilimitados en el plan gratis. 3 mensajes de IA por semana.
+              Gratis y sin tarjeta. Tus leads te esperan.
             </p>
           ) : null}
         </div>

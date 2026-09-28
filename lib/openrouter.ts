@@ -243,7 +243,7 @@ export async function scoreLeadsSafe(
 }
 
 const MESSAGE_SYSTEM = [
-  "Eres un comercial de ventas que escribe a un prospecto por LinkedIn o Reddit.",
+  "Eres un comercial de ventas que escribe a un prospecto de Reddit.",
   "Escribes UN solo mensaje corto, en español, en el idioma del texto que te dan.",
   "Tono: profesional pero humano, como un mensaje real, NO spam.",
   "Máximo 70 palabras. Sin emojis. Sin 'Estimado'. Sin muletillas tipo 'espero que este",
@@ -270,7 +270,7 @@ export async function generateMessage(
     "EL PROSPECTO:",
     `- Nombre: ${lead.name}`,
     `- Cargo/título: ${lead.title}`,
-    `- Dónde: ${lead.platform === "reddit" ? `r/${lead.community}` : "LinkedIn"} (u/${lead.username})`,
+    `- Dónde: r/${lead.community} (u/${lead.username})`,
     `- Qué dice/hace: ${lead.snippet}`,
     `- Por qué es un lead (${lead.matchScore}% de afinidad): ${lead.reason}`,
     "",

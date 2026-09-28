@@ -1,6 +1,6 @@
 "use client";
 
-import { IconArrow, IconLock, IconReddit, IconLinkedIn, IconTarget } from "@/components/icons";
+import { IconArrow, IconLock, IconReddit, IconTarget } from "@/components/icons";
 import { isUnlockedLead, type ScanResponse } from "@/lib/api";
 import type { MaskedLead } from "@/lib/mask";
 import type { Lead } from "@/lib/types";
@@ -14,11 +14,10 @@ function scoreTone(score: number) {
 }
 
 function PlatformBadge({ platform, community }: { platform: string; community?: string }) {
-  const isReddit = platform === "reddit";
   return (
     <span className="badge border-line bg-bg/60 text-ink-2">
-      {isReddit ? <IconReddit className="h-3.5 w-3.5 text-[#ff4500]" /> : <IconLinkedIn className="h-3.5 w-3.5 text-[#0a66c2]" />}
-      {isReddit ? (community ? `r/${community}` : "Reddit") : "LinkedIn"}
+      <IconReddit className="h-3.5 w-3.5 text-[#ff4500]" />
+      {community ? `r/${community}` : "Reddit"}
     </span>
   );
 }

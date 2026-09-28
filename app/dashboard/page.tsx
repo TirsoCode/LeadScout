@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
-import { getCurrentUser, usingSupabase } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/auth";
 import {
   countMessagesThisWeek,
   getLeadsForUser,
@@ -48,14 +48,13 @@ export default async function DashboardPage() {
   return (
     <DashboardClient
       userEmail={user.email}
-      mode={usingSupabase() ? "supabase" : "local"}
       initialLeads={leads}
       initialSearches={summaries}
       initialMessages={messages}
       initialQuota={{
         used,
         limit: FREE_WEEKLY_MESSAGE_LIMIT,
-        remaining: Math.max(0, FREE_WEEKLY_MESSAGE_LIMIT - used),
+        remaining: null,
       }}
     />
   );

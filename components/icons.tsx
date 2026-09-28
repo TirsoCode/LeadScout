@@ -49,6 +49,24 @@ export function IconSparkle({ className = "h-5 w-5" }: IconProps) {
   );
 }
 
+/**
+ * Marca de IA: chip con un destello dentro. Sustituye a la frase larga que
+ * estaba en el pie ("Hecho con IA"): ahora lo dice el icono, no el texto.
+ */
+export function IconAI({ className = "h-5 w-5" }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <rect x="4.5" y="4.5" width="15" height="15" rx="4.5" />
+      <path
+        d="M12 8.3l1.15 2.55L15.7 12l-2.55 1.15L12 15.7l-1.15-2.55L8.3 12l2.55-1.15L12 8.3z"
+        fill="currentColor"
+        stroke="none"
+      />
+      <path d="M9.5 4.5V3M14.5 4.5V3M9.5 19.5V21M14.5 19.5V21" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function IconGlobe({ className = "h-5 w-5" }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
@@ -168,14 +186,6 @@ export function IconReddit({ className = "h-4 w-4" }: IconProps) {
     <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M12 2.5A9.5 9.5 0 0 0 4.3 5.8l.5 2.2A7.7 7.7 0 0 0 2.2 12c0 1.3.3 2.5.9 3.6l-1 3.6 4-1.9c1.2.5 2.5.8 3.9.8a6.6 6.6 0 0 0 1.3-.1A5.6 5.6 0 0 1 10 13.4c0-2.3 2.3-4.2 5.2-4.2.5 0 1 .1 1.5.2a5.9 5.9 0 0 1 3.4-.4l.5-2.4A9.5 9.5 0 0 0 12 2.5zm-3.1 6.3a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6zm6.2 0a1.3 1.3 0 1 1 0 2.6 1.3 1.3 0 0 1 0-2.6z" />
       <path d="M7.6 13.2c0 2.4 3 4.3 6.7 4.3s6.7-1.9 6.7-4.3c0-.3-.1-.7-.2-1l-1.6.6a4.2 4.2 0 0 0-1.5-.3c-.6 0-1.2.1-1.7.3a5.9 5.9 0 0 0-5.4 0 4.2 4.2 0 0 0-1.7-.3c-.5 0-1 .1-1.5.3l-1.6-.6c-.1.3-.2.7-.2 1z" fill="#ffffff" />
-    </svg>
-  );
-}
-
-export function IconLinkedIn({ className = "h-4 w-4" }: IconProps) {
-  return (
-    <svg className={className} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
-      <path d="M20.4 2H3.6A1.6 1.6 0 0 0 2 3.6v16.8A1.6 1.6 0 0 0 3.6 22h16.8a1.6 1.6 0 0 0 1.6-1.6V3.6A1.6 1.6 0 0 0 20.4 2zM8 19H5V9.5h3V19zM6.5 8.1a1.8 1.8 0 1 1 0-3.5 1.8 1.8 0 0 1 0 3.5zM19 19h-3v-4.6c0-1.1 0-2.5-1.5-2.5s-1.8 1.2-1.8 2.4V19h-3V9.5h2.9v1.3h.04a3.2 3.2 0 0 1 2.86-1.6c3.1 0 3.6 2 3.6 4.6V19z" />
     </svg>
   );
 }

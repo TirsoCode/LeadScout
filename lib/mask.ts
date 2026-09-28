@@ -10,9 +10,11 @@
  * Lo que sí viaja en claro (SPEC.md): % de afinidad, plataforma y comunidad.
  */
 
+import type { Platform } from "./types";
+
 export type MaskedLead = {
   id: string;
-  platform: "reddit" | "linkedin";
+  platform: Platform;
   community?: string;
   matchScore: number;
   nameMasked: string;
@@ -45,7 +47,7 @@ function snippetMask(value: string): string {
 
 export function maskLead(lead: {
   id: string;
-  platform: "reddit" | "linkedin";
+  platform: Platform;
   community?: string;
   matchScore: number;
   name: string;

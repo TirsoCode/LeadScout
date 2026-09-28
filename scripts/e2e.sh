@@ -63,13 +63,16 @@ if echo "$sess" | grep -q "$EMAIL"; then ok "la sesión reconoce al usuario"; el
 if echo "$sess" | grep -q 'passwordHash'; then bad "FUGA: /session devuelve passwordHash"; else ok "/session no filtra passwordHash"; fi
 if echo "$sess" | grep -q '"quota"'; then ok "la sesión trae la cuota"; else bad "falta la cuota"; fi
 
-echo "== 6. Login repetido y password incorrecto =="
+echo "== 6. Login repetido, auto-fallback y password incorrecto =="
 dup=$(curl -s -m 30 -X POST "$BASE/api/auth/signup" -H 'Content-Type: application/json' \
   -d "{\"mode\":\"signup\",\"email\":\"$EMAIL\",\"password\":\"pruebalocal123\"}")
-if echo "$dup" | grep -q 'Ya existe'; then ok "rechaza el email duplicado"; else bad "aceptó un duplicado: $dup"; fi
+if echo "$dup" | grep -q '"user"'; then ok "'crear cuenta' con email existente inicia sesión"; else bad "el duplicado debía iniciar sesión: $dup"; fi
 wrong=$(curl -s -m 30 -X POST "$BASE/api/auth/signup" -H 'Content-Type: application/json' \
   -d "{\"mode\":\"login\",\"email\":\"$EMAIL\",\"password\":\"claveequivocada\"}")
 if echo "$wrong" | grep -q 'incorrecta'; then ok "rechaza la contraseña incorrecta"; else bad "aceptó la contraseña incorrecta: $wrong"; fi
+fresh=$(curl -s -m 30 -X POST "$BASE/api/auth/signup" -H 'Content-Type: application/json' \
+  -d "{\"mode\":\"login\",\"email\":\"nuevo-$(date +%s)@leadscout.test\",\"password\":\"pruebalocal123\"}")
+if echo "$fresh" | grep -q '"user"'; then ok "'iniciar sesión' con email nuevo crea la cuenta"; else bad "no creó la cuenta: $fresh"; fi
 short=$(curl -s -m 30 -X POST "$BASE/api/auth/signup" -H 'Content-Type: application/json' \
   -d "{\"mode\":\"signup\",\"email\":\"x@y.com\",\"password\":\"corta\"}")
 if echo "$short" | grep -q '8 caracteres'; then ok "exige contraseña de 8+ caracteres"; else bad "no valida la longitud: $short"; fi
@@ -89,23 +92,23 @@ steal=$(curl -s -m 30 -b "$JAR2" -X POST "$BASE/api/messages" -H 'Content-Type: 
   -d "{\"leadId\":\"$lead_id\"}")
 if echo "$steal" | grep -q 'no es tuyo'; then ok "un usuario no puede usar el lead de otro"; else bad "FUGA: pudo usar el lead ajeno: $steal"; fi
 
-echo "== 9. Generador de mensajes y cuota de 3/semana =="
-for i in 1 2 3; do
+echo "== 9. Generador de mensajes (ilimitados por ahora) =="
+for i in 1 2 3 4; do
   r=$(curl -s -m 60 -b "$JAR" -X POST "$BASE/api/messages" -H 'Content-Type: application/json' -d "{\"leadId\":\"$lead_id\"}")
   if echo "$r" | grep -q '"message"'; then ok "mensaje $i generado"; else bad "mensaje $i falló: $r"; fi
 done
 body=$(echo "$r" | grep -oE '"body":"[^"]{10,}"' | head -1)
 if [ -n "$body" ]; then ok "el mensaje tiene contenido real"; else bad "el mensaje está vacío"; fi
-quota=$(curl -s -m 30 -b "$JAR" -X POST "$BASE/api/messages" -H 'Content-Type: application/json' -d "{\"leadId\":\"$lead_id\"}")
-if echo "$quota" | grep -q 'QUOTA_EXCEEDED'; then ok "el 4º mensaje se bloquea (límite 3/semana)"; else bad "el límite no se aplicó: $quota"; fi
+limit=$(echo "$r" | grep -oE '"limit":null' | head -1)
+if [ "$limit" = '"limit":null' ]; then ok "no hay tope de mensajes (limit null)"; else bad "el límite no es null: $r"; fi
 
-echo "== 10. Editar mensajes no gasta cuota =="
+echo "== 10. Editar mensajes y sesión sin tope =="
 msg_id=$(echo "$r" > /dev/null; curl -s -m 20 -b "$JAR" "$BASE/api/messages" | grep -oE '"id":"msg_[^"]+"' | head -1 | cut -d'"' -f4)
 ed=$(curl -s -m 30 -b "$JAR" -X PATCH "$BASE/api/messages" -H 'Content-Type: application/json' \
   -d "{\"id\":\"$msg_id\",\"text\":\"Mensaje editado a mano por el usuario.\"}")
 if echo "$ed" | grep -q 'editado a mano'; then ok "guarda la edición del usuario"; else bad "no guardó la edición: $ed"; fi
-used=$(curl -s -m 20 -b "$JAR" "$BASE/api/auth/session" | grep -oE '"used":[0-9]+' | head -1)
-if [ "$used" = '"used":3' ]; then ok "editar no incrementa la cuota (sigue en 3)"; else bad "la cuota cambió tras editar: $used"; fi
+sesslim=$(curl -s -m 20 -b "$JAR" "$BASE/api/auth/session" | grep -oE '"limit":null' | head -1)
+if [ "$sesslim" = '"limit":null' ]; then ok "la sesión sigue con límite null (ilimitado)"; else bad "la cuota de la sesión no es ilimitada: $sesslim"; fi
 
 echo "== 11. Dashboard protegido =="
 code=$(curl -s -o /dev/null -m 20 -w '%{http_code}' "$BASE/dashboard")

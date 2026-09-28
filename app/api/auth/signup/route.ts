@@ -72,20 +72,33 @@ async function withSupabase(mode: "signup" | "login", email: string, password: s
     },
   );
 
-  const credentials = mode === "signup" ? { email, password } : { email, password };
-  const { data, error } = mode === "signup"
-    ? await supabase.auth.signUp(credentials)
-    : await supabase.auth.signInWithPassword(credentials);
+  // Gracia del registro ciego (SPEC.md): "crear cuenta" con un email que ya
+  // existe inicia sesión, y "iniciar sesión" con un email nuevo crea la cuenta.
+  // Solo falla si la contraseña no encaja en ningún caso.
+  if (mode === "signup") {
+    const { data, error } = await supabase.auth.signUp({ email, password });
+    if (!error && data.user?.email) {
+      return { user: { id: data.user.id, email: data.user.email, createdAt: data.user.created_at ?? new Date().toISOString() } };
+    }
+    // Si ya existe una cuenta, el signUp devuelve error: intentamos el login.
+    const { data: loginData, error: loginError } = await supabase.auth.signInWithPassword({ email, password });
+    if (!loginError && loginData.user?.email) {
+      return { user: { id: loginData.user.id, email: loginData.user.email, createdAt: loginData.user.created_at ?? new Date().toISOString() } };
+    }
+    // La contraseña tampoco vale para la cuenta existente.
+    return { error: friendlyAuthError({ code: loginError?.code ?? error?.code, message: loginError?.message ?? error?.message ?? "No se pudo completar la autenticación." }) };
+  }
 
-  if (error) return { error: friendlyAuthError({ code: error.code, message: error.message }) };
-  if (!data.user?.email) return { error: "No se pudo completar el registro." };
-
-  const user: User = {
-    id: data.user.id,
-    email: data.user.email,
-    createdAt: data.user.created_at ?? new Date().toISOString(),
-  };
-  return { user };
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (!error && data.user?.email) {
+    return { user: { id: data.user.id, email: data.user.email, createdAt: data.user.created_at ?? new Date().toISOString() } };
+  }
+  // No existe la cuenta o la contraseña es mala: probamos a crearla.
+  const { data: signupData, error: signupError } = await supabase.auth.signUp({ email, password });
+  if (!signupError && signupData.user?.email) {
+    return { user: { id: signupData.user.id, email: signupData.user.email, createdAt: signupData.user.created_at ?? new Date().toISOString() } };
+  }
+  return { error: friendlyAuthError({ code: signupError?.code ?? error?.code, message: signupError?.message ?? error?.message ?? "No se pudo iniciar sesión." }) };
 }
 
 export async function POST(request: Request) {
@@ -128,13 +141,22 @@ export async function POST(request: Request) {
   // --- modo local ---
   const existing = await findUserByEmail(email);
 
-  if (mode === "signup") {
-    if (existing) {
-      return NextResponse.json(
-        { error: "Ya existe una cuenta con ese email. Prueba a iniciar sesión." },
-        { status: 409 },
-      );
+  if (mode === "signup" && existing) {
+    // "Crear cuenta" con un email que ya existe: si la contraseña encaja,
+    // inicia sesión (gracia del registro ciego).
+    if (existing.passwordHash && verifyPassword(password, existing.passwordHash)) {
+      setSessionCookie(existing.id);
+      await claimPreviewForUser(existing.id, getPreviewSearchId());
+      clearPreviewCookie();
+      return NextResponse.json({ user: { id: existing.id, email: existing.email, createdAt: existing.createdAt } });
     }
+    return NextResponse.json(
+      { error: "Ya existe una cuenta con ese email o la contraseña es incorrecta." },
+      { status: 401 },
+    );
+  }
+
+  if (mode === "signup") {
     const user: User & { passwordHash: string } = {
       id: randomId("usr"),
       email,
@@ -150,10 +172,19 @@ export async function POST(request: Request) {
   }
 
   if (!existing?.passwordHash) {
-    return NextResponse.json(
-      { error: "No encontramos una cuenta con ese email." },
-      { status: 401 },
-    );
+    // "Iniciar sesión" con un email que no existe: crea la cuenta.
+    const user: User & { passwordHash: string } = {
+      id: randomId("usr"),
+      email,
+      createdAt: new Date().toISOString(),
+      passwordHash: hashPassword(password),
+    };
+    await createLocalUser(user);
+    setSessionCookie(user.id);
+    await claimPreviewForUser(user.id, getPreviewSearchId());
+    clearPreviewCookie();
+    const { passwordHash: _ignored, ...safe } = user;
+    return NextResponse.json({ user: safe });
   }
   if (!verifyPassword(password, existing.passwordHash)) {
     return NextResponse.json({ error: "Contraseña incorrecta." }, { status: 401 });

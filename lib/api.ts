@@ -20,20 +20,21 @@ export type ScanResponse = {
 export type SessionResponse = {
   user: User | null;
   mode: "supabase" | "local";
-  quota?: { used: number; limit: number; remaining: number };
+  /** `limit: null` == mensajes ilimitados (de momento). */
+  quota?: { used: number; limit: number | null; remaining: number | null };
 };
 
 export type GenerateMessageResponse = {
   message: Message;
   source: "ai" | "template";
-  quota: { used: number; limit: number; remaining: number };
+  quota: { used: number; limit: number | null; remaining: number | null };
 };
 
 export type ApiError = {
   error: string;
   code?: string;
   resetDate?: string;
-  quota?: { used: number; limit: number; remaining: number };
+  quota?: { used: number; limit: number | null; remaining: number | null };
 };
 
 /** Error de API con el mensaje ya listo para pintar y el status HTTP. */

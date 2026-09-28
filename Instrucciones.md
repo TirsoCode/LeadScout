@@ -5,7 +5,7 @@
 
 ## ¿Qué es LeadScout?
 
-LeadScout es un micro SaaS que ayuda a cualquier negocio con web a encontrar clientes potenciales reales usando IA. El usuario entra en la web, pega la URL de su negocio, y la IA analiza qué hace ese negocio, busca en LinkedIn y Reddit personas que necesitan exactamente ese servicio, y muestra los resultados con un porcentaje de match.
+LeadScout es un micro SaaS que ayuda a cualquier negocio con web a encontrar clientes potenciales reales usando IA. El usuario entra en la web, pega la URL de su negocio, y la IA analiza qué hace ese negocio, busca en Reddit personas que necesitan exactamente ese servicio, y muestra los resultados con un porcentaje de match.
 
 El truco está en que los resultados aparecen pixelados hasta que te registras. Ves que hay leads ahí, ves los porcentajes, ves que son reales... pero no puedes leerlos. Eso genera una curiosidad brutal que convierte visitas en registros.
 
@@ -37,8 +37,7 @@ La IA analiza automáticamente la web del usuario:
 Esto tarda unos segundos y se muestra una pantalla de carga con algo tipo "Analyzing your business..."
 
 ### Paso 3 — Búsqueda de leads
-Con ese análisis, la IA busca en LinkedIn y Reddit:
-- Perfiles de LinkedIn que encajan con el cliente ideal
+Con ese análisis, la IA busca en Reddit:
 - Posts de Reddit donde gente pide ese tipo de servicio
 - Conversaciones donde alguien tiene el problema que resuelve tu negocio
 
@@ -47,7 +46,7 @@ Aparece una lista de leads. Se puede ver:
 - El nombre (pixelado/borroso)
 - El cargo o perfil (pixelado)
 - El % de match (este SÍ se ve claro, tipo 94%, 87%, 91%...)
-- La plataforma (LinkedIn o Reddit)
+- La plataforma (Reddit)
 - Un fragmento del por qué es un buen lead (pixelado)
 
 El usuario ve que hay leads reales con porcentajes altos pero no puede leerlos. Abajo aparece un botón: "Unlock your leads — it's free"
@@ -58,7 +57,7 @@ El usuario se registra con email o Google. Sin tarjeta de crédito, sin nada. Co
 ### Paso 6 — Dashboard
 Una vez registrado ve todos sus leads desbloqueados:
 - Nombre y perfil completo
-- Plataforma (LinkedIn/Reddit)
+- Plataforma (Reddit)
 - % de match y por qué
 - Enlace directo al perfil
 - Botón "Generate message"
@@ -122,7 +121,6 @@ Limpio, con tabla de leads, filtros por plataforma y por % de match, y el genera
 
 ### Scraping
 - **Reddit API** — API oficial gratuita, fácil de usar
-- **LinkedIn** — Se añade después (más complicado por restricciones)
 
 ### Auth + Base de datos
 - **Supabase** — Gestiona tanto la autenticación (email + Google) como la base de datos PostgreSQL. Plan gratuito generoso.
@@ -183,8 +181,6 @@ Para tener algo que mostrar y conseguir los primeros usuarios solo hace falta:
 5. Registro con Supabase Auth
 6. Dashboard con leads desbloqueados
 7. Generador de mensajes básico con límite semanal en Supabase
-
-LinkedIn se añade en una segunda iteración.
 
 ---
 

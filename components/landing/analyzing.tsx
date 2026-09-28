@@ -10,7 +10,7 @@ import { IconCheck, IconSpinner } from "@/components/icons";
 const STEPS = [
   "Analizando tu web…",
   "Extrayendo tu servicio y cliente ideal…",
-  "Buscando en Reddit y LinkedIn…",
+  "Buscando en Reddit…",
   "Puntuando afinidad de cada lead…",
 ];
 

@@ -64,8 +64,8 @@ try {
   await sleep(3500);
   const nav = await evaluate(ws, `[...document.querySelectorAll('header button, nav button')]
     .map(b => b.textContent.trim()).filter(Boolean)`);
-  nav.includes("Sign in") ? ok(`navbar tiene "Sign in" (${nav.join(" / ")})`) : bad(`navbar sin Sign in: ${nav}`);
-  nav.includes("Sign up") ? ok(`navbar tiene "Sign up"`) : bad("navbar sin Sign up");
+  nav.includes("Iniciar sesión") ? ok(`navbar tiene "Iniciar sesión" (${nav.join(" / ")})`) : bad(`navbar sin Iniciar sesión: ${nav}`);
+  nav.includes("Crear cuenta") ? ok(`navbar tiene "Crear cuenta"`) : bad("navbar sin Crear cuenta");
 
   console.log("== B. Validación de URL en el propio input ==");
   await evaluate(ws, `(() => {
@@ -81,9 +81,9 @@ try {
   const bg = await evaluate(ws, `getComputedStyle(document.body).backgroundColor`);
   bg === "rgb(255, 255, 255)" ? ok("fondo sigue blanco tras el error") : bad(`fondo cambió a ${bg}`);
 
-  console.log("== C. Sign up abre la pantalla de registro ==");
+  console.log("== C. Crear cuenta abre la pantalla de registro ==");
   await evaluate(ws, `(() => {
-    const btn = [...document.querySelectorAll('header button')].find(b => b.textContent.trim() === 'Sign up');
+    const btn = [...document.querySelectorAll('header button')].find(b => b.textContent.trim() === 'Crear cuenta');
     btn.click();
   })()`);
   // router.push("/auth?mode=signup") pide la ruta al servidor, así que con el dev
@@ -145,9 +145,9 @@ try {
     ? ok(`registro OK -> ${where.url} (h1: "${where.h1}")`)
     : bad(`no llegó al dashboard: ${where.url} (h1: ${where.h1})`);
 
-  console.log("== E. Cuota visible en el dashboard ==");
-  const quota = await evaluate(ws, `[...document.querySelectorAll('span')].map(s => s.textContent).find(t => /^\\d\\/\\d$/.test(t?.trim() ?? '')) ?? null`);
-  quota ? ok(`cuota pintada: ${quota}`) : bad("no se ve la cuota");
+  console.log("== E. Cuota ilimitada visible en el dashboard ==");
+  const unlimited = await evaluate(ws, `[...document.querySelectorAll('span')].map(s => s.textContent.trim()).some(t => t === 'Sin límite')`);
+  unlimited ? ok("se muestra 'Sin límite' (mensajes ilimitados)") : bad("no se ve el badge de mensajes ilimitados");
 
   console.log("== F. Botón 'Salir' ==");
   const hasLogout = await evaluate(ws, `[...document.querySelectorAll('button')].some(b => b.textContent.includes('Salir'))`);

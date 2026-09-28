@@ -27,14 +27,12 @@ export type SearchSummary = {
  */
 export function DashboardClient({
   userEmail,
-  mode,
   initialLeads,
   initialSearches,
   initialMessages,
   initialQuota,
 }: {
   userEmail: string;
-  mode: "supabase" | "local";
   initialLeads: Lead[];
   initialSearches: SearchSummary[];
   initialMessages: Message[];
@@ -76,9 +74,7 @@ export function DashboardClient({
           <div className="flex items-center gap-3">
             <div className="hidden text-right sm:block">
               <p className="max-w-[180px] truncate text-xs font-medium">{userEmail}</p>
-              <p className="text-[11px] text-ink-2">
-                {mode === "supabase" ? "Sesión con Supabase" : "Sesión local (dev)"}
-              </p>
+              <p className="text-[11px] text-ink-2">Sesión activa</p>
             </div>
             <button type="button" onClick={handleLogout} className="btn-ghost !px-3.5 !py-2 !text-xs">
               <IconLogout />
@@ -114,29 +110,35 @@ export function DashboardClient({
           </div>
         </div>
 
-        {/* Cuota del plan gratis (SPEC.md, paso 8) */}
+        {/* Cuota de mensajes (de momento ilimitados) */}
         <div className="card mt-6 flex flex-col gap-3 p-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <p className="text-sm font-medium">Mensajes de IA esta semana</p>
             <p className="mt-0.5 text-xs text-ink-2">
-              Leads y búsquedas ilimitados. Los mensajes de IA se renuevan cada lunes.
+              {quota.limit === null
+                ? "Ilimitados por ahora. Genera todos los que necesites."
+                : "Leads y búsquedas ilimitados. Los mensajes de IA se renuevan cada lunes."}
             </p>
           </div>
-          <div className="flex items-center gap-3">
-            <div className="flex gap-1.5" aria-hidden="true">
-              {Array.from({ length: quota.limit }).map((_, index) => (
-                <span
-                  key={index}
-                  className={`h-2.5 w-8 rounded-full ${
-                    index < quota.used ? "bg-accent" : "bg-line"
-                  }`}
-                />
-              ))}
+          {quota.limit === null ? (
+            <span className="badge border-accent/30 bg-accent/10 text-accent">Sin límite</span>
+          ) : (
+            <div className="flex items-center gap-3">
+              <div className="flex gap-1.5" aria-hidden="true">
+                {Array.from({ length: quota.limit }).map((_, index) => (
+                  <span
+                    key={index}
+                    className={`h-2.5 w-8 rounded-full ${
+                      index < quota.used ? "bg-accent" : "bg-line"
+                    }`}
+                  />
+                ))}
+              </div>
+              <span className="text-sm tabular-nums text-ink-2">
+                {quota.used}/{quota.limit}
+              </span>
             </div>
-            <span className="text-sm tabular-nums text-ink-2">
-              {quota.used}/{quota.limit}
-            </span>
-          </div>
+          )}
         </div>
 
         {/* Selector de búsqueda, si el usuario ha analizado varias webs */}

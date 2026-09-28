@@ -28,7 +28,7 @@ const STEPS = [
   {
     icon: IconSearch,
     title: "Buscamos por ti",
-    text: "La IA recorre LinkedIn y Reddit buscando personas que estén pidiendo exactamente tu servicio, ahora mismo.",
+    text: "La IA recorre Reddit buscando personas que estén pidiendo exactamente tu servicio, ahora mismo.",
   },
   {
     icon: IconTarget,
@@ -76,7 +76,7 @@ const PERKS = [
   { text: "Leads y búsquedas ilimitados" },
   { text: "% de afinidad en cada lead, con su motivo" },
   { text: "Mensajes de IA personalizados, no plantillas" },
-  { text: "3 mensajes de IA por semana en el plan gratis" },
+  { text: "Mensajes de IA ilimitados por ahora" },
   { text: "Puedes editar tus mensajes sin límite" },
   { text: "Sin tarjeta de crédito. Nunca." },
 ];
@@ -125,7 +125,7 @@ export function Pricing() {
 const FAQS = [
   {
     q: "¿De dónde salen los leads?",
-    a: "De Reddit (y LinkedIn a partir de la segunda iteración). Buscamos conversaciones donde alguien pide el servicio que tú ofreces, así que el lead es real y el contexto es público.",
+    a: "De Reddit. Buscamos conversaciones donde alguien pide el servicio que tú ofreces, así que el lead es real y el contexto es público.",
   },
   {
     q: "¿Cómo se calcula el porcentaje de match?",
@@ -197,7 +197,7 @@ export function MessageTeaser() {
             editas si quieres y lo copias.
           </p>
           <ul className="mt-6 space-y-2.5 text-sm text-ink-2">
-            {["Máximo 3 mensajes IA por semana en el plan gratis", "Edición ilimitada de lo que ya escribiste", "Sin enlaces en Reddit, porque se lee como spam"].map(
+            {["Mensajes de IA ilimitados por ahora", "Edición ilimitada de lo que ya escribiste", "Sin enlaces en Reddit, porque se lee como spam"].map(
               (item) => (
                 <li key={item} className="flex items-start gap-2.5">
                   <IconCheck className="mt-0.5 h-4 w-4 shrink-0 text-accent" />

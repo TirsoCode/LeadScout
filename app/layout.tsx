@@ -23,11 +23,10 @@ export const metadata: Metadata = {
     template: "%s · LeadScout",
   },
   description:
-    "Pega la URL de tu negocio y la IA encuentra en LinkedIn y Reddit a personas que necesitan exactamente tu servicio. Con porcentaje de afinidad incluido.",
+    "Pega la URL de tu negocio y la IA encuentra en Reddit a personas que necesitan exactamente tu servicio. Con porcentaje de afinidad incluido.",
   keywords: [
     "lead generation",
     "prospectos",
-    "scraping linkedin",
     "scraping reddit",
     "generación de leads con IA",
     "ventas B2B",
@@ -35,7 +34,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "LeadScout — Encuentra clientes potenciales automáticamente",
     description:
-      "Pega la URL de tu negocio y descubre quién necesita tu servicio, en LinkedIn y Reddit.",
+      "Pega la URL de tu negocio y descubre quién necesita tu servicio, en Reddit.",
     type: "website",
     url: "https://leadscout.vercel.app",
     siteName: "LeadScout",

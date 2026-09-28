@@ -320,7 +320,7 @@ export function scoreLeadsHeuristic(
 }
 
 function buildReason(lead: Lead, hits: string[], score: number): string {
-  const where = lead.platform === "reddit" ? `r/${lead.community}` : "LinkedIn";
+  const where = `r/${lead.community}`;
   const topic = hits.length ? ` sobre ${hits.slice(0, 2).join(" y ")}` : "";
   if (score >= 85) return `Pide explícitamente este servicio en ${where}${topic}. Está listo para contratar.`;
   if (score >= 70) return `Tiene el problema exacto que resuelves y busca soluciones en ${where}${topic}.`;

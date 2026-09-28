@@ -304,7 +304,7 @@ function mapLead(row: Record<string, unknown>): Lead {
   return {
     id: String(row.id),
     searchId: String(row.search_id),
-    platform: row.platform === "linkedin" ? "linkedin" : "reddit",
+    platform: "reddit",
     name: String(row.name),
     title: String(row.title),
     username: String(row.username),

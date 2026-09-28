@@ -5,7 +5,7 @@ import { api, ApiErrorResponse, type GenerateMessageResponse } from "@/lib/api";
 import type { Lead, Message } from "@/lib/types";
 import { IconClose, IconCopy, IconLock, IconMessage, IconSpinner } from "@/components/icons";
 
-export type Quota = { used: number; limit: number; remaining: number };
+export type Quota = { used: number; limit: number | null; remaining: number | null };
 
 /**
  * Panel lateral del paso 7: genera el mensaje, deja editarlo y copiarlo.
@@ -110,7 +110,8 @@ export function MessagePanel({
     }
   }
 
-  const exhausted = quota.remaining <= 0 && !messageId;
+  // `limit === null` == sin tope: los mensajes son ilimitados por ahora.
+  const exhausted = quota.limit !== null && quota.remaining !== null && quota.remaining <= 0 && !messageId;
 
   return (
     <div className="fixed inset-0 z-50 flex justify-end" role="dialog" aria-modal="true" aria-label="Generador de mensajes">
@@ -138,7 +139,7 @@ export function MessagePanel({
         <div className="border-b border-line bg-bg-2/50 px-5 py-3 text-xs text-ink-2">
           <div className="flex items-center justify-between">
             <span>
-              {lead.matchScore}% de afinidad · {lead.platform === "reddit" ? `r/${lead.community}` : "LinkedIn"}
+              {lead.matchScore}% de afinidad · r/{lead.community}
             </span>
             <a
               href={lead.url}

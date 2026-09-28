@@ -1,7 +1,7 @@
 /**
- * GET /api/auth/session — quién está conectado y cuánto queda del plan gratis.
+ * GET /api/auth/session — quién está conectado y el estado de la cuota.
  * El dashboard lo usa para pintar la cuota de mensajes sin tener que pedirla
- * en cada interacción.
+ * en cada interacción. De momento `limit` es null == mensajes ilimitados.
  */
 
 import { NextResponse } from "next/server";
@@ -23,6 +23,6 @@ export async function GET() {
   return NextResponse.json({
     user,
     mode: usingSupabase() ? "supabase" : "local",
-    quota: { used, limit: FREE_WEEKLY_MESSAGE_LIMIT, remaining: Math.max(0, FREE_WEEKLY_MESSAGE_LIMIT - used) },
+    quota: { used, limit: FREE_WEEKLY_MESSAGE_LIMIT, remaining: null },
   });
 }

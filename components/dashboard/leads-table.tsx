@@ -6,7 +6,7 @@ import type { Lead } from "@/lib/types";
 import { isUnlockedLead } from "@/lib/api";
 import type { MaskedLead } from "@/lib/mask";
 
-type Filter = { platform: "all" | "reddit" | "linkedin"; minScore: number };
+type Filter = { platform: "all" | "reddit"; minScore: number };
 
 const SCORE_TIERS = [
   { value: 0, label: "Todos" },
@@ -74,7 +74,6 @@ export function LeadsTable({
           >
             <option value="all">Todas las plataformas</option>
             <option value="reddit">Solo Reddit</option>
-            <option value="linkedin">Solo LinkedIn</option>
           </select>
 
           <select

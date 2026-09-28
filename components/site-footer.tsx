@@ -57,10 +57,6 @@ export function SiteFooter() {
 
         <div className="mt-12 flex flex-col gap-3 border-t border-line/60 pt-6 text-xs text-ink-2/70 sm:flex-row sm:items-center sm:justify-between">
           <p>© {new Date().getFullYear()} LeadScout. Todos los derechos reservados.</p>
-          <p>
-            Hecho para freelancers, agencias y equipos que viven de conseguir clientes. Hecho con{" "}
-            <span className="text-ink-2">IA</span>.
-          </p>
         </div>
       </div>
     </footer>

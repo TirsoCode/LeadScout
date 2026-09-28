@@ -1,12 +1,12 @@
 /**
  * /api/messages — generación y gestión de mensajes IA.
  *
- *  POST  { leadId }          genera un mensaje para ese lead (gasta cuota)
- *  PATCH { id, body }        guarda las ediciones del usuario (gratis, sin cuota)
+ *  POST  { leadId }          genera un mensaje para ese lead
+ *  PATCH { id, body }        guarda las ediciones del usuario
  *  GET                      lista los mensajes del usuario
  *
- * El límite de 3/semana del plan gratis se comprueba SIEMPRE en el servidor:
- * el cliente puede mentir, el servidor no.
+ * De momento los mensajes son ILIMITADOS (plan gratis en fase de validación):
+ * no hay tope semanal y el servidor nunca bloquea la generación.
  */
 
 import { NextResponse } from "next/server";
@@ -50,24 +50,6 @@ export async function POST(request: Request) {
   const leadId = typeof body.leadId === "string" ? body.leadId : "";
   if (!leadId) return NextResponse.json({ error: "Falta el lead." }, { status: 400 });
 
-  // Comprobamos la cuota antes de gastar nada.
-  const used = await countMessagesThisWeek(user.id);
-  if (used >= FREE_WEEKLY_MESSAGE_LIMIT) {
-    const week = new Date(Date.now() + 7 * 86_400_000).toLocaleDateString("es-ES", {
-      day: "numeric",
-      month: "long",
-    });
-    return NextResponse.json(
-      {
-        error: `Has usado tus ${FREE_WEEKLY_MESSAGE_LIMIT} mensajes de esta semana.`,
-        code: "QUOTA_EXCEEDED",
-        resetDate: week,
-        quota: { used, limit: FREE_WEEKLY_MESSAGE_LIMIT, remaining: 0 },
-      },
-      { status: 429 },
-    );
-  }
-
   // Localizamos el lead entre las búsquedas del usuario (nunca de otro usuario).
   const [leads, searches] = await Promise.all([getLeadsForUser(user.id), getSearchesForUser(user.id)]);
   const lead = leads.find((item) => item.id === leadId);
@@ -90,11 +72,11 @@ export async function POST(request: Request) {
   };
   await saveMessage(message);
 
-  const after = used + 1;
+  const used = await countMessagesThisWeek(user.id).catch(() => 0);
   return NextResponse.json({
     message,
     source: generated.source,
-    quota: { used: after, limit: FREE_WEEKLY_MESSAGE_LIMIT, remaining: Math.max(0, FREE_WEEKLY_MESSAGE_LIMIT - after) },
+    quota: { used, limit: FREE_WEEKLY_MESSAGE_LIMIT, remaining: 0 },
   });
 }
 
@@ -120,7 +102,6 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Ese mensaje no existe o no es tuyo." }, { status: 404 });
   }
 
-  // Editar no gasta cuota (SPEC.md: "puede editar mensajes viejos sin límite").
   const updated: Message = { ...existing, body: text, editedAt: new Date().toISOString() };
   await saveMessage(updated);
 

@@ -1,6 +1,6 @@
 // Modelo de datos de LeadScout. Ver SPEC.md / Instrucciones.md.
 
-export type Platform = "reddit" | "linkedin";
+export type Platform = "reddit";
 
 /** Perfil de negocio extraido de la web del usuario. */
 export type BusinessProfile = {
@@ -21,7 +21,7 @@ export type BusinessProfile = {
   source: "ai" | "heuristic";
 };
 
-/** Un lead encontrado en Reddit (o LinkedIn en una segunda iteracion). */
+/** Un lead encontrado en Reddit. */
 export type Lead = {
   id: string;
   searchId: string;
@@ -71,8 +71,11 @@ export type Message = {
   editedAt?: string;
 };
 
-/** Límite del plan gratis (SPEC.md): 3 mensajes IA por semana. */
-export const FREE_WEEKLY_MESSAGE_LIMIT = 3;
+/**
+ * De momento los mensajes de IA son ilimitados. `null` == sin tope semanal:
+ * el servidor nunca bloquea la generación (antes eran 3/semana).
+ */
+export const FREE_WEEKLY_MESSAGE_LIMIT: number | null = null;
 
 /** Cuántos leads se guardan por scan en la base de datos. */
 export const MAX_LEADS_PER_SEARCH = 25;
