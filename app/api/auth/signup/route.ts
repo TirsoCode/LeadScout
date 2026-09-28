@@ -85,18 +85,24 @@ async function withSupabase(mode: "signup" | "login", email: string, password: s
     if (!loginError && loginData.user?.email) {
       return { user: { id: loginData.user.id, email: loginData.user.email, createdAt: loginData.user.created_at ?? new Date().toISOString() } };
     }
-    // La contraseña tampoco vale para la cuenta existente.
     return { error: friendlyAuthError({ code: loginError?.code ?? error?.code, message: loginError?.message ?? error?.message ?? "No se pudo completar la autenticación." }) };
   }
 
+  // mode === "login"
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (!error && data.user?.email) {
     return { user: { id: data.user.id, email: data.user.email, createdAt: data.user.created_at ?? new Date().toISOString() } };
   }
-  // No existe la cuenta o la contraseña es mala: probamos a crearla.
+  // No entra por contraseña: puede que no exista la cuenta (la creamos) o que
+  // la contraseña sea mala (signUp devolverá "ya existe" y seguimos con el
+  // error original de credenciales).
   const { data: signupData, error: signupError } = await supabase.auth.signUp({ email, password });
   if (!signupError && signupData.user?.email) {
     return { user: { id: signupData.user.id, email: signupData.user.email, createdAt: signupData.user.created_at ?? new Date().toISOString() } };
+  }
+  if (signupError && (signupError.code === "user_already_exists" || signupError.message.toLowerCase().includes("already"))) {
+    // La cuenta existe pero la contraseña no encaja: mensaje de credenciales.
+    return { error: friendlyAuthError({ code: error?.code, message: error?.message ?? "Invalid login credentials" }) };
   }
   return { error: friendlyAuthError({ code: signupError?.code ?? error?.code, message: signupError?.message ?? error?.message ?? "No se pudo iniciar sesión." }) };
 }
