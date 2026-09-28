@@ -44,11 +44,7 @@ export default async function LandingPage({
           <div className="container-page flex min-h-[calc(100vh-4rem)] flex-col justify-center py-16 sm:py-20">
             <div className="flex flex-col items-center gap-10">
               <HeroCopy />
-              {/* Suspense: ScanExperience usa useSearchParams para abrir el
-                  modal cuando la navbar navega a /?auth=signup. */}
-              <Suspense fallback={<div className="mx-auto h-24 w-full max-w-2xl" />}>
-                <ScanExperience signedIn={Boolean(user)} />
-              </Suspense>
+              <ScanExperience signedIn={Boolean(user)} />
             </div>
 
             <div className="mt-16 border-t border-line/50 pt-10">

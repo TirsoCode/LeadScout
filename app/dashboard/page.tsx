@@ -21,7 +21,7 @@ export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
   const user = await getCurrentUser();
-  if (!user) redirect("/?auth=login");
+  if (!user) redirect("/auth?mode=login");
 
   const [searches, leads, messages, used] = await Promise.all([
     getSearchesForUser(user.id),

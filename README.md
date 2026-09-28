@@ -67,9 +67,11 @@ npm run test:bg     # background-color computado por el navegador
 
 - **Gratis ahora, sin plan de pago.** 3 mensajes por semana (semana ISO, UTC).
 - Google login está implementado y el botón se muestra siempre. Sin claves de
-  Supabase, al pulsarlo el modal explica que faltan
+  Supabase, al pulsarlo la pantalla `/auth` explica que faltan
   `NEXT_PUBLIC_SUPABASE_URL` y `NEXT_PUBLIC_SUPABASE_ANON_KEY` en vez de
   fallar en silencio.
+- **Registro e inicio de sesión son una pantalla aparte** (`/auth`): panel de
+  marca a la izquierda y formulario a la derecha, no un modal sobre la landing.
 - `metadata` de `/dashboard` es `robots: noindex`. Las páginas son dinámicas
   (leen cookies), así que no hay `output: "export"`.
 

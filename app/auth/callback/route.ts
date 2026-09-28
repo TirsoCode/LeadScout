@@ -22,16 +22,16 @@ export async function GET(request: Request) {
 
   if (error) {
     return NextResponse.redirect(
-      `${origin}/?auth=login&err=${encodeURIComponent(String(error))}`,
+      `${origin}/auth?mode=login&err=${encodeURIComponent(String(error))}`,
     );
   }
 
   if (!usingSupabase()) {
-    return NextResponse.redirect(`${origin}/?auth=login`);
+    return NextResponse.redirect(`${origin}/auth?mode=login`);
   }
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/?auth=login`);
+    return NextResponse.redirect(`${origin}/auth?mode=login`);
   }
 
   const { createServerClient } = await import("@supabase/ssr");
@@ -55,7 +55,7 @@ export async function GET(request: Request) {
 
   if (exchangeError || !data.user?.email) {
     return NextResponse.redirect(
-      `${origin}/?auth=login&err=${encodeURIComponent(
+      `${origin}/auth?mode=login&err=${encodeURIComponent(
         exchangeError?.message ?? "No se pudo completar el inicio de sesión.",
       )}`,
     );

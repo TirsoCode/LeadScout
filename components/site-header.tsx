@@ -18,12 +18,16 @@ export function SiteHeader() {
         <nav className="flex items-center gap-2 sm:gap-3">
           <button
             type="button"
-            onClick={() => router.push("/?auth=login")}
+            onClick={() => router.push("/auth?mode=login")}
             className="rounded-lg px-3.5 py-2 text-sm font-medium text-ink-2 transition-colors hover:text-ink sm:px-4"
           >
             Sign in
           </button>
-          <button type="button" onClick={() => router.push("/?auth=signup")} className="btn-accent !px-4 !py-2">
+          <button
+            type="button"
+            onClick={() => router.push("/auth?mode=signup")}
+            className="btn-accent !px-4 !py-2"
+          >
             <IconPaperPlane className="h-4 w-4" />
             Sign up
           </button>

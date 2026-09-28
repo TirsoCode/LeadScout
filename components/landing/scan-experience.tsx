@@ -1,13 +1,12 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { api, ApiErrorResponse, type ScanResponse } from "@/lib/api";
 import { validateUrlInput } from "@/lib/utils";
 import { IconArrow, IconClose, IconGlobe, IconSearch, IconSparkle } from "@/components/icons";
 import { Analyzing } from "@/components/landing/analyzing";
 import { PixelatedResults } from "@/components/landing/pixelated-results";
-import { AuthModal } from "@/components/auth/auth-modal";
 
 type Phase = "idle" | "analyzing" | "results";
 
@@ -19,33 +18,6 @@ export function ScanExperience({ signedIn }: { signedIn: boolean }) {
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<ScanResponse | null>(null);
-  const [authOpen, setAuthOpen] = useState<"signup" | "login" | null>(null);
-  const [authError, setAuthError] = useState<string | null>(null);
-
-  // La navbar navega con router.push("/?auth=signup|login"). Como eso no
-  // remonta el componente, hay que leer la query con useSearchParams (que sí
-  // re-renderiza al cambiarla) en vez de solo en el useEffect de montaje.
-  //
-  // `handledRef` evita que un mismo aviso se reaplique: si no, cerrar el modal
-  // y un re-render volverían a abrirlo.
-  const handledRef = useRef<string | null>(null);
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const auth = searchParams.get("auth");
-    const err = searchParams.get("err");
-    if (!auth && !err) return;
-
-    const key = `${auth ?? ""}|${err ?? ""}`;
-    if (handledRef.current === key) return;
-    handledRef.current = key;
-
-    if (auth === "signup" || auth === "login") setAuthOpen(auth);
-    if (err) setAuthError(err);
-
-    // Limpiamos la query: si el usuario recarga, el modal no se reabre solo.
-    window.history.replaceState(null, "", window.location.pathname);
-  }, [searchParams]);
 
   async function handleScan(event: React.FormEvent) {
     event.preventDefault();
@@ -163,7 +135,12 @@ export function ScanExperience({ signedIn }: { signedIn: boolean }) {
         <div>
           <PixelatedResults
             data={data}
-            onUnlock={() => (signedIn ? router.push("/dashboard") : setAuthOpen("signup"))}
+            // Desbloquear = crear cuenta (o ir al dashboard si ya hay sesión).
+            // La cookie httpOnly de preview viaja con la petición, así que el
+            // servidor vincula esta búsqueda al usuario nuevo en el registro.
+            onUnlock={() =>
+              signedIn ? router.push("/dashboard") : router.push("/auth?mode=signup")
+            }
           />
           <div className="mt-5 text-center">
             <button
@@ -176,20 +153,6 @@ export function ScanExperience({ signedIn }: { signedIn: boolean }) {
           </div>
         </div>
       ) : null}
-
-      <AuthModal
-        open={authOpen !== null}
-        mode={authOpen ?? "signup"}
-        initialError={authError}
-        onClose={() => {
-          setAuthOpen(null);
-          setAuthError(null);
-        }}
-        onSuccess={() => {
-          setAuthOpen(null);
-          setAuthError(null);
-        }}
-      />
     </>
   );
 }

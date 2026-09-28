@@ -8,7 +8,7 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 - `npm run typecheck` — `tsc --noEmit` (verificación rápida principal)
 - `npm run lint` — `next lint`
 - `npm test` — `scripts/e2e.sh`: 33 checks contra el server por HTTP (API real, cookies y cookies de sesión)
-- `npm run test:ui` — `scripts/ui-flow.mjs`: Chromium headless, hace clic y escribe de verdad (modal, validación, registro, dashboard)
+- `npm run test:ui` — `scripts/ui-flow.mjs`: Chromium headless, hace clic y escribe de verdad (pantalla de acceso, validación, registro, dashboard)
 - `npm run test:bg` — `scripts/check-bg.mjs`: lee el `background-color` **computado** por el navegador
 - `npm run shot -- <url> <salida.png>` — captura de pantalla headless
 - `npm run pixel -- <png> [x] [y]` — decodifica el PNG y dice el color real del píxel (sin dependencias)
@@ -54,12 +54,18 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 - **El pixelado no es solo CSS.** `lib/mask.ts` recorta los leads en el **servidor**; el `filter: blur(6px)` es el finishing touch. Un anónimo nunca recibe `url`, `username`, `snippet` ni `reason`. Hay un test que lo verifica: no rompas `MaskedLead`.
 - **El límite de 3 mensajes/semana se comprueba en el servidor** (`app/api/messages`). `PATCH` (editar) no lo consume. La semana es ISO y se calcula en UTC.
 - **Aislamiento entre usuarios**: los leads se cargan con `getLeadsForUser(userId)`, nunca por `leadId` suelto. Un lead ajeno devuelve 404.
-- **La navbar abre el modal con `router.push("/?auth=signup")`**, que no remonta el componente. Por eso `ScanExperience` usa `useSearchParams` + `handledRef`; con un `useEffect` de solo montaje el modal no abría y había que recargar.
+- **La autenticación es una pantalla propia, no un modal.** `/auth` parte la
+  viewport: panel verde de marca a la izquierda, formulario a la derecha. La
+  navbar navega a `/auth?mode=signup|login` (con `router.push`, que no remonta
+  nada), el botón "desbloquear" de la preview va a `/auth?mode=signup` y un
+  OAuth fallido aterriza en `/auth?err=...`. La landing redirige los enlaces
+  viejos `/?auth=...` a `/auth`, así que `ScanExperience` ya no usa
+  `useSearchParams` ni `<Suspense>`.
 - **Cambiar `tailwind.config.ts` no invalida el CSS de `.next`.** El dev server sigue sirviendo las utilities con los valores viejos: tras pasar a fondo blanco, `.text-ink` seguía valiendo `#fff` y el texto quedaba blanco sobre blanco sin error de build. **Solución: parar el dev server, `rm -rf .next`, arrancar.** Si tocas tokens de color, hazlo siempre.
 - **Nunca lances `npm run build` con `next dev` corriendo**: los dos escriben en `.next` y corrompen el CSS servido (página sin estilos). Para el build, para el dev server antes.
 - **`.data/` está en `.gitignore`**: contiene el secret y la base de datos local de desarrollo.
 - **Reddit devuelve 403 desde IPs de datacenter.** Es normal en local; por eso existe `demoLeads`. La etiqueta `live: false` y el badge "Dataset de demostración" son intencionales.
-- **El botón de Google se muestra siempre**, tenga o no Supabase configurado. Si faltan `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `handleGoogle` (en `components/auth/auth-modal.tsx`) lo explica en el modal en vez de dejar un botón muerto. Ya no existe la prop `googleEnabled`: si la añades de vuelta para ocultarlo, recuerda que es una decisión de producto, no un detalle técnico.
+- **El botón de Google se muestra siempre**, tenga o no Supabase configurado. Si faltan `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `handleGoogle` (en `components/auth/auth-screen.tsx`) lo explica en la propia pantalla en vez de dejar un botón muerto. Ya no existe la prop `googleEnabled`: si la añades de vuelta para ocultarlo, recuerda que es una decisión de producto, no un detalle técnico.
 - **El `title` de cada página se escribe entero y a mano.** Un `title` en string de una página sustituye al del `layout` y **no** hereda su `template` (`"%s · LeadScout"`), así que la pestaña de Chrome se queda sin marca si no la incluyas. Hoy ambas páginas usan `"LeadScout"`, que es lo que el usuario quiere ver arriba.
 - `metadata` de `/dashboard` es `robots: noindex`. Las páginas son dinámicas (leen cookies), nada de `output: "export"`.
 

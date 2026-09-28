@@ -81,23 +81,43 @@ try {
   const bg = await evaluate(ws, `getComputedStyle(document.body).backgroundColor`);
   bg === "rgb(255, 255, 255)" ? ok("fondo sigue blanco tras el error") : bad(`fondo cambió a ${bg}`);
 
-  console.log("== C. El modal de registro se abre ==");
+  console.log("== C. Sign up abre la pantalla de registro ==");
   await evaluate(ws, `(() => {
     const btn = [...document.querySelectorAll('header button')].find(b => b.textContent.trim() === 'Sign up');
     btn.click();
   })()`);
-  // router.push("/?auth=signup") pide la ruta al servidor, así que con el dev
+  // router.push("/auth?mode=signup") pide la ruta al servidor, así que con el dev
   // server recién compilado (o tras borrar .next) puede tardar bastante.
   // Sondeamos en vez de esperar un tiempo fijo.
-  let dialog = false;
-  for (let i = 0; i < 20 && !dialog; i++) {
+  let screen = false;
+  for (let i = 0; i < 20 && !screen; i++) {
     await sleep(500);
-    dialog = await evaluate(ws, `(() => {
-      const d = document.querySelector('[role="dialog"]');
-      return d ? d.textContent.includes('Desbloquea tus leads') : false;
-    })()`);
+    screen = await evaluate(ws, `location.pathname === '/auth' && !!document.querySelector('#auth-email')`);
   }
-  dialog ? ok("el modal de registro abre correctamente") : bad("el modal no abre");
+  screen ? ok("la pantalla de registro se abre en /auth") : bad("no se llegó a /auth");
+  const split = await evaluate(ws, `(() => {
+    const h1 = document.querySelector('h1')?.textContent?.trim() ?? '';
+    const panel = !!document.querySelector('aside');
+    const stats = document.body.textContent.includes('leads encontrados');
+    return { h1, panel, stats };
+  })()`);
+  split.panel && split.stats
+    ? ok(`layout partido con panel de marca (h1: "${split.h1}")`)
+    : bad(`falta el panel de marca: ${JSON.stringify(split)}`);
+
+  console.log("== C2. Se alterna entre registro e inicio de sesión ==");
+  await evaluate(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Inicia sesión')?.click()`);
+  await sleep(400);
+  const loginView = await evaluate(ws, `({
+    h1: document.querySelector('h1')?.textContent?.trim() ?? '',
+    mode: new URLSearchParams(location.search).get('mode')
+  })`);
+  loginView.mode === "login" && loginView.h1.includes("Bienvenido")
+    ? ok(`alterna a login sin recargar (h1: "${loginView.h1}")`)
+    : bad(`no alterna a login: ${JSON.stringify(loginView)}`);
+  // Volvemos a registro para el paso D.
+  await evaluate(ws, `[...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Regístrate gratis')?.click()`);
+  await sleep(400);
 
   console.log("== D. Registro real desde la UI ==");
   const email = `ui-${Date.now()}@leadscout.test`;
@@ -109,7 +129,7 @@ try {
     };
     const mail = document.querySelector('#auth-email');
     const pass = document.querySelector('#auth-password');
-    if (!mail || !pass) throw new Error('el modal no tiene los campos del formulario');
+    if (!mail || !pass) throw new Error('la pantalla no tiene los campos del formulario');
     setNative(mail, '${email}');
     setNative(pass, 'pruebalocal123');
     mail.closest('form').requestSubmit();
