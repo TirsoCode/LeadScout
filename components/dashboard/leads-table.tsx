@@ -1,10 +1,13 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { LeadRow } from "@/components/landing/pixelated-results";
-import type { Lead } from "@/lib/types";
+import { LeadRow } from "@/components/results/lead-row";
+import type { Lead, LeadSort } from "@/lib/types";
+import { LEAD_SORTS } from "@/lib/types";
+import { sortLeads } from "@/lib/leads";
 import { isUnlockedLead } from "@/lib/api";
 import type { MaskedLead } from "@/lib/mask";
+import { IconSort, IconStar } from "@/components/icons";
 
 type Filter = { platform: "all" | "reddit"; minScore: number };
 
@@ -17,32 +20,46 @@ const SCORE_TIERS = [
 
 /**
  * Lista de leads del dashboard: leads reales, sin pixelar, con filtros por
- * plataforma y por % de afinidad (SPEC.md, paso 6).
+ * plataforma y por % de afinidad (SPEC.md, paso 6). Además ordena la lista y
+ * deja filtrar por favoritos.
  */
 export function LeadsTable({
   leads,
   onGenerate,
   generatingId,
+  onToggleFavorite,
+  pendingFavoriteId,
 }: {
   leads: (Lead | MaskedLead)[];
   onGenerate: (lead: Lead) => void;
   generatingId: string | null;
+  onToggleFavorite?: (lead: Lead, favorite: boolean) => void;
+  pendingFavoriteId?: string | null;
 }) {
   const [filter, setFilter] = useState<Filter>({ platform: "all", minScore: 0 });
   const [query, setQuery] = useState("");
+  const [sort, setSort] = useState<LeadSort>("score");
+  const [onlyFavorites, setOnlyFavorites] = useState(false);
+
+  const favoriteCount = useMemo(
+    () => leads.filter((lead) => isUnlockedLead(lead) && lead.favorite).length,
+    [leads],
+  );
 
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
-    return leads.filter((lead) => {
+    const matched = leads.filter((lead) => {
       if (filter.platform !== "all" && lead.platform !== filter.platform) return false;
       if (lead.matchScore < filter.minScore) return false;
+      if (onlyFavorites && !(isUnlockedLead(lead) && lead.favorite)) return false;
       if (!needle) return true;
       const haystack = isUnlockedLead(lead)
         ? `${lead.name} ${lead.title} ${lead.snippet} ${lead.reason} ${lead.username} ${lead.community ?? ""}`
         : `${lead.nameMasked} ${lead.titleMasked}`;
       return haystack.toLowerCase().includes(needle);
     });
-  }, [leads, filter, query]);
+    return sortLeads(matched, sort);
+  }, [leads, filter, query, sort, onlyFavorites]);
 
   return (
     <section className="card overflow-hidden">
@@ -63,6 +80,20 @@ export function LeadsTable({
             aria-label="Buscar leads"
             className="input !py-2 !text-sm sm:w-56"
           />
+
+          {onToggleFavorite ? (
+            <button
+              type="button"
+              onClick={() => setOnlyFavorites((value) => !value)}
+              aria-pressed={onlyFavorites}
+              className={`btn-ghost !px-3 !py-2 !text-sm ${onlyFavorites ? "!border-accent !text-accent" : ""}`}
+              disabled={favoriteCount === 0}
+              title={favoriteCount === 0 ? "Todavía no tienes favoritos" : undefined}
+            >
+              <IconStar filled={onlyFavorites} />
+              Solo favoritos
+            </button>
+          ) : null}
 
           <select
             value={filter.platform}
@@ -90,12 +121,30 @@ export function LeadsTable({
               </option>
             ))}
           </select>
+
+          <div className="relative">
+            <IconSort className="pointer-events-none absolute left-3 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-ink-2/60" />
+            <select
+              value={sort}
+              onChange={(event) => setSort(event.target.value as LeadSort)}
+              aria-label="Ordenar leads"
+              className="input !w-auto !py-2 !pl-8 !text-sm"
+            >
+              {LEAD_SORTS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
       </div>
 
       {filtered.length === 0 ? (
         <p className="p-10 text-center text-sm text-ink-2">
-          Ningún lead cumple estos filtros. Prueba a bajar el mínimo de afinidad.
+          {onlyFavorites
+            ? "No tienes favoritos todavía. Marca alguno con la estrella."
+            : "Ningún lead cumple estos filtros. Prueba a bajar el mínimo de afinidad."}
         </p>
       ) : (
         <ul>
@@ -106,6 +155,9 @@ export function LeadsTable({
               locked={!isUnlockedLead(lead)}
               onGenerate={onGenerate}
               generating={generatingId === lead.id}
+              onToggleFavorite={onToggleFavorite}
+              pendingFavoriteId={pendingFavoriteId}
+              detailHref={isUnlockedLead(lead) ? `/lead/${lead.id}` : undefined}
             />
           ))}
         </ul>

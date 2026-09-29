@@ -116,13 +116,58 @@ if [ "$code" = "307" ] || [ "$code" = "302" ] || [ "$code" = "303" ]; then ok "e
 code=$(curl -s -o /dev/null -m 20 -b "$JAR" -w '%{http_code}' "$BASE/dashboard")
 check "el registrado entra al dashboard" "$code" "200"
 
-echo "== 12. Logout =="
+echo "== 12. Pantalla de resultados (/resultados/[searchId]) =="
+# El anónimo que acaba de escanear llega con la cookie de preview: ve su
+# búsqueda, pero enmascarada.
+JAR3=$(mktemp)
+preview=$(curl -s -m 90 -c "$JAR3" -X POST "$BASE/api/scan" -H 'Content-Type: application/json' -d '{"url":"stripe.com"}')
+preview_id=$(echo "$preview" | grep -oE '"searchId":"[^"]+"' | head -1 | cut -d'"' -f4)
+code=$(curl -s -o /tmp/e2e-results.html -m 60 -b "$JAR3" -w '%{http_code}' "$BASE/resultados/$preview_id")
+check "el anónimo ve su propia búsqueda" "$code" "200"
+if grep -q 'nameMasked' /tmp/e2e-results.html; then ok "la página llega con los leads enmascarados"; else bad "no hay leads enmascarados en /resultados"; fi
+# Otra búsqueda que no es suya: 404, ni siquiera confirmamos que exista.
+code=$(curl -s -o /dev/null -m 30 -b "$JAR3" -w '%{http_code}' "$BASE/resultados/search_inexistente_zzz")
+check "una búsqueda ajena o inexistente da 404" "$code" "404"
+# La del propio usuario, ya con sesión: leads completos.
+auth_id=$(echo "$auth" | grep -oE '"searchId":"[^"]+"' | head -1 | cut -d'"' -f4)
+code=$(curl -s -o /tmp/e2e-results-auth.html -m 30 -b "$JAR" -w '%{http_code}' "$BASE/resultados/$auth_id")
+check "el registrado entra a su propia búsqueda" "$code" "200"
+if grep -q 'nameMasked' /tmp/e2e-results-auth.html; then bad "sus propios leads no deberían ir enmascarados"; else ok "sus propios leads llegan completos"; fi
+
+echo "== 13. Ficha del lead (/lead/[id]) =="
+code=$(curl -s -o /dev/null -m 30 -b "$JAR" -w '%{http_code}' "$BASE/lead/$lead_id")
+check "el registrado abre la ficha de su lead" "$code" "200"
+# El anónimo va a /auth con `next` para volver a la ficha.
+code=$(curl -s -o /dev/null -m 30 -w '%{http_code}' "$BASE/lead/$lead_id")
+if [ "$code" = "307" ] || [ "$code" = "302" ] || [ "$code" = "303" ]; then ok "el anónimo es redirigido a /auth (code $code)"; else bad "el anónimo no fue redirigido (code $code)"; fi
+# Lead de otro usuario: 404, no 403. El 403 confirmaría que el id existe.
+steal_lead=$(curl -s -o /dev/null -m 30 -b "$JAR2" -w '%{http_code}' "$BASE/lead/$lead_id")
+check "la ficha de un lead ajeno da 404" "$steal_lead" "404"
+
+echo "== 14. Favoritos (PATCH /api/leads) =="
+fav=$(curl -s -m 30 -b "$JAR" -X PATCH "$BASE/api/leads" -H 'Content-Type: application/json' \
+  -d "{\"id\":\"$lead_id\",\"favorite\":true}")
+if echo "$fav" | grep -q '"favorite":true'; then ok "marca su lead como favorito"; else bad "no marcó el favorito: $fav"; fi
+unfav=$(curl -s -m 30 -b "$JAR" -X PATCH "$BASE/api/leads" -H 'Content-Type: application/json' \
+  -d "{\"id\":\"$lead_id\",\"favorite\":false}")
+if echo "$unfav" | grep -q '"favorite":false'; then ok "desmarca el favorito"; else bad "no desmarcó: $unfav"; fi
+code=$(curl -s -o /dev/null -m 30 -w '%{http_code}' -X PATCH "$BASE/api/leads" -H 'Content-Type: application/json' \
+  -d "{\"id\":\"$lead_id\",\"favorite\":true}")
+check "sin sesión, marcar favorito da 401" "$code" "401"
+code=$(curl -s -o /dev/null -m 30 -b "$JAR2" -w '%{http_code}' -X PATCH "$BASE/api/leads" -H 'Content-Type: application/json' \
+  -d "{\"id\":\"$lead_id\",\"favorite\":true}")
+check "marcar el lead de otro da 404" "$code" "404"
+code=$(curl -s -o /dev/null -m 30 -b "$JAR" -w '%{http_code}' -X PATCH "$BASE/api/leads" -H 'Content-Type: application/json' \
+  -d "{\"id\":\"$lead_id\",\"favorite\":\"sí\"}")
+check "un favorite que no es booleano da 400" "$code" "400"
+
+echo "== 15. Logout =="
 # OJO: -b solo LEE el jar; hace falta -c para que curl guarde el borrado.
 curl -s -m 20 -b "$JAR" -c "$JAR" -X POST "$BASE/api/auth/logout" > /dev/null
 sess2=$(curl -s -m 20 -b "$JAR" "$BASE/api/auth/session")
 if echo "$sess2" | grep -q '"user":null'; then ok "el logout cierra la sesión"; else bad "el logout no cerró la sesión: $sess2"; fi
 
-rm -f "$JAR" "$JAR2"
+rm -f "$JAR" "$JAR2" "$JAR3"
 echo
 echo "================================"
 echo "  PASS: $PASS   FAIL: $FAIL"

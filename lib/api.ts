@@ -101,6 +101,12 @@ export const api = {
     }),
 
   messages: () => request<{ messages: Message[] }>("/api/messages"),
+
+  setFavorite: (id: string, favorite: boolean) =>
+    request<{ lead: Lead }>("/api/leads", {
+      method: "PATCH",
+      body: JSON.stringify({ id, favorite }),
+    }),
 };
 
 /** ¿Es este lead un MaskedLead (preview) o un Lead completo? */

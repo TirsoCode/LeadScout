@@ -15,7 +15,6 @@ const COLUMNS: { title: string; links: { label: string; href: string }[] }[] = [
     title: "About",
     links: [
       { label: "Cómo funciona", href: "/#como-funciona" },
-      { label: "Preguntas frecuentes", href: "/#faq" },
       { label: "Contacto", href: "mailto:hola@leadscout.app" },
     ],
   },

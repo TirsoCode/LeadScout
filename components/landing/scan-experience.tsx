@@ -2,22 +2,25 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { api, ApiErrorResponse, type ScanResponse } from "@/lib/api";
+import { api, ApiErrorResponse } from "@/lib/api";
 import { validateUrlInput } from "@/lib/utils";
 import { IconArrow, IconClose, IconGlobe, IconSearch, IconSparkle } from "@/components/icons";
 import { Analyzing } from "@/components/landing/analyzing";
-import { PixelatedResults } from "@/components/landing/pixelated-results";
 
-type Phase = "idle" | "analyzing" | "results";
+type Phase = "idle" | "analyzing";
 
 const EXAMPLES = ["stripe.com", "fiverr.com", "awebdesigner.com"];
 
-export function ScanExperience({ signedIn }: { signedIn: boolean }) {
+/**
+ * El input de la landing. Cuando el scan termina NO se pinta aquí: navega a
+ * `/resultados/<searchId>`, que es su propia pantalla. La landing queda como
+ * punto de entrada y la lista de leads vive en su sitio.
+ */
+export function ScanExperience() {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
   const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<ScanResponse | null>(null);
 
   async function handleScan(event: React.FormEvent) {
     event.preventDefault();
@@ -36,23 +39,16 @@ export function ScanExperience({ signedIn }: { signedIn: boolean }) {
 
     try {
       const result = await api.scan(validation.url);
-      setData(result);
-      setPhase("results");
-      // Si el usuario ya está registrado, sus leads llegan completos.
+      // `refresh()` antes de navegar: si el scan vino con sesión, el servidor
+      // tiene que repintar la navbar con el estado de cuenta.
       if (result.unlocked) router.refresh();
+      router.push(`/resultados/${result.searchId}`);
     } catch (err) {
       setPhase("idle");
       setError(
         err instanceof ApiErrorResponse ? err.message : "No se pudo completar el análisis.",
       );
     }
-  }
-
-  function reset() {
-    setPhase("idle");
-    setData(null);
-    setError(null);
-    setUrl("");
   }
 
   return (
@@ -127,32 +123,8 @@ export function ScanExperience({ signedIn }: { signedIn: boolean }) {
         </div>
       ) : null}
 
-      {/* ---------------- Paso 2-3: análisis ---------------- */}
+      {/* ---------------- Paso 2: análisis ---------------- */}
       {phase === "analyzing" ? <Analyzing /> : null}
-
-      {/* ---------------- Paso 4: resultados pixelados ---------------- */}
-      {phase === "results" && data ? (
-        <div>
-          <PixelatedResults
-            data={data}
-            // Desbloquear = crear cuenta (o ir al dashboard si ya hay sesión).
-            // La cookie httpOnly de preview viaja con la petición, así que el
-            // servidor vincula esta búsqueda al usuario nuevo en el registro.
-            onUnlock={() =>
-              signedIn ? router.push("/dashboard") : router.push("/auth?mode=signup")
-            }
-          />
-          <div className="mt-5 text-center">
-            <button
-              type="button"
-              onClick={reset}
-              className="text-sm text-ink-2 underline-offset-4 transition-colors hover:text-accent hover:underline"
-            >
-              ← Analizar otra web
-            </button>
-          </div>
-        </div>
-      ) : null}
     </>
   );
 }

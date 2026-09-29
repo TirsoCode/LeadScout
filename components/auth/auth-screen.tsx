@@ -257,12 +257,6 @@ export function AuthScreen({
               {mode === "signup" ? "Inicia sesión" : "Regístrate gratis"}
             </button>
           </p>
-
-          {mode === "signup" ? (
-            <p className="mt-4 text-center text-xs leading-relaxed text-ink-2/70">
-              Gratis y sin tarjeta. Tus leads te esperan.
-            </p>
-          ) : null}
         </div>
       </main>
     </div>

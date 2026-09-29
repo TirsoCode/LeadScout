@@ -118,6 +118,7 @@ export async function searchReddit(
         reason: "",
         createdAt: new Date((d.created_utc ?? 0) * 1000).toISOString(),
         origin: "reddit",
+        favorite: false,
       });
       if (leads.length >= limit) break;
     }
@@ -298,6 +299,7 @@ export function demoLeads(business: BusinessProfile, searchId: string): Lead[] {
       reason: "",
       createdAt: new Date(Date.now() - daysAgo * 86_400_000).toISOString(),
       origin: "demo",
+      favorite: false,
     });
   }
   return leads;

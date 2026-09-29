@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import type { SearchSummary } from "./dashboard-client";
-import { IconEye, IconRefresh, IconSpinner } from "@/components/icons";
+import { IconExternal, IconEye, IconRefresh, IconSpinner } from "@/components/icons";
 
 function formatDate(iso: string) {
   try {
@@ -105,6 +106,16 @@ export function SearchHistory({
                           Demostración
                         </span>
                       ) : null}
+                      {/* "Ver" filtra la tabla; este enlace abre la pantalla
+                          completa de la búsqueda, con su resumen y su CSV. */}
+                      <Link
+                        href={`/resultados/${search.id}`}
+                        className="btn-ghost !px-2.5 !py-1 !text-xs"
+                        title="Abrir la pantalla de resultados de esta búsqueda"
+                      >
+                        <IconExternal className="h-3.5 w-3.5" />
+                        Abrir
+                      </Link>
                       <button
                         type="button"
                         onClick={() => onSelect(search.id)}

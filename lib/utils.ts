@@ -122,3 +122,32 @@ export function currentIsoWeek(date = new Date()): string {
   const weekNo = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7);
   return `${d.getUTCFullYear()}-W${String(weekNo).padStart(2, "0")}`;
 }
+
+/**
+ * Antigüedad en días de una fecha ISO. `null` si la fecha no es válida, para
+ * que la UI pueda decidir qué pintar en vez de mostrar "NaN días".
+ */
+export function daysSince(iso: string, now = Date.now()): number | null {
+  const timestamp = new Date(iso).getTime();
+  if (!Number.isFinite(timestamp)) return null;
+  return Math.max(0, Math.floor((now - timestamp) / 86_400_000));
+}
+
+/** "hace 3 días", "hoy", "hace 2 meses". Devuelve "" si la fecha no vale. */
+export function relativeTime(iso: string, now = Date.now()): string {
+  const days = daysSince(iso, now);
+  if (days === null) return "";
+  if (days === 0) return "hoy";
+  if (days === 1) return "ayer";
+  if (days < 7) return `hace ${days} días`;
+  if (days < 30) {
+    const weeks = Math.floor(days / 7);
+    return `hace ${weeks} ${weeks === 1 ? "semana" : "semanas"}`;
+  }
+  if (days < 365) {
+    const months = Math.floor(days / 30);
+    return `hace ${months} ${months === 1 ? "mes" : "meses"}`;
+  }
+  const years = Math.floor(days / 365);
+  return `hace ${years} ${years === 1 ? "año" : "años"}`;
+}

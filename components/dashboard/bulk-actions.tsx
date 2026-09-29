@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { api, ApiErrorResponse } from "@/lib/api";
+import { api } from "@/lib/api";
 import type { Lead, Message } from "@/lib/types";
+import { copyText } from "@/lib/clipboard";
 import { IconCheck, IconCopy, IconSpinner } from "@/components/icons";
 import type { Quota } from "./message-panel";
 
@@ -21,21 +22,6 @@ export function BulkCopyButton({
 }) {
   const [busy, setBusy] = useState(false);
   const [status, setStatus] = useState<{ text: string; ok: boolean } | null>(null);
-
-  async function copyText(text: string) {
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const area = document.createElement("textarea");
-      area.value = text;
-      area.style.position = "fixed";
-      area.style.opacity = "0";
-      document.body.appendChild(area);
-      area.select();
-      document.execCommand("copy");
-      area.remove();
-    }
-  }
 
   async function handleCopyAll() {
     if (busy || leads.length === 0) return;

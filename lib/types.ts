@@ -44,6 +44,11 @@ export type Lead = {
   createdAt: string;
   /** Fuente real de los datos: "reddit" o "demo" si no hay red. */
   origin: "reddit" | "demo";
+  /**
+   * Marcado por el usuario como favorito. Es estado POR USUARIO, asi que
+   * viaja solo en el `Lead` completo: un `MaskedLead` no lo lleva nunca.
+   */
+  favorite: boolean;
 };
 
 /** Resultado completo de un scan: perfil + leads + estado de la IA. */
@@ -82,3 +87,20 @@ export const MAX_LEADS_PER_SEARCH = 25;
 
 /** Cuántos leads se devuelven al usuario final. */
 export const LEADS_SHOWN = 12;
+
+/** Tramos en los que se agrupan los leads para el resumen de la búsqueda. */
+export const SCORE_TIERS = [
+  { min: 85, label: "Caliente", hint: "pide tu servicio explícitamente" },
+  { min: 70, label: "Tibio", hint: "problema relacionado claro" },
+  { min: 0, label: "Frío", hint: "toca tu área, poco probable" },
+] as const;
+
+/** Función de comparación para ordenar la lista de leads. */
+export type LeadSort = "score" | "recent" | "community" | "name";
+
+export const LEAD_SORTS: { value: LeadSort; label: string }[] = [
+  { value: "score", label: "Mayor afinidad" },
+  { value: "recent", label: "Más recientes" },
+  { value: "community", label: "Por comunidad" },
+  { value: "name", label: "Por nombre" },
+];

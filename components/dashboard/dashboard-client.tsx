@@ -6,12 +6,14 @@ import { useRouter } from "next/navigation";
 import { api, ApiErrorResponse, isUnlockedLead } from "@/lib/api";
 import type { Lead, Message } from "@/lib/types";
 import type { MaskedLead } from "@/lib/mask";
+import { clampExport, csvFilename, leadsToCsv } from "@/lib/leads";
+import { downloadTextFile } from "@/lib/clipboard";
 import { LeadsTable } from "@/components/dashboard/leads-table";
 import { MessagePanel, type Quota } from "@/components/dashboard/message-panel";
 import { SearchBox, type ScannedResult } from "@/components/dashboard/search-box";
 import { SearchHistory } from "@/components/dashboard/search-history";
 import { BulkCopyButton } from "@/components/dashboard/bulk-actions";
-import { IconCheck, IconLogout, IconTarget } from "@/components/icons";
+import { IconCheck, IconDownload, IconLogout, IconTarget } from "@/components/icons";
 
 export type SearchSummary = {
   id: string;
@@ -60,6 +62,7 @@ export function DashboardClient({
   const [selectedSearch, setSelectedSearch] = useState<string>("all");
   const [findMoreId, setFindMoreId] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const [pendingFavoriteId, setPendingFavoriteId] = useState<string | null>(null);
 
   const visible = useMemo(
     () => (selectedSearch === "all" ? leads : leads.filter((lead) => lead.searchId === selectedSearch)),
@@ -67,6 +70,46 @@ export function DashboardClient({
   );
 
   const messageFor = (leadId: string) => messages.find((message) => message.leadId === leadId);
+
+  /**
+   * Favorito con actualización optimista: la estrella responde al instante y se
+   * revierte si el servidor dice que no (lead ajeno, sesión caducada, ...).
+   */
+  async function handleToggleFavorite(lead: Lead, favorite: boolean) {
+    setPendingFavoriteId(lead.id);
+    setLeads((current) =>
+      current.map((item) => (item.id === lead.id ? { ...item, favorite } : item)),
+    );
+    try {
+      const { lead: updated } = await api.setFavorite(lead.id, favorite);
+      setLeads((current) => current.map((item) => (item.id === updated.id ? updated : item)));
+    } catch (err) {
+      setLeads((current) =>
+        current.map((item) => (item.id === lead.id ? { ...item, favorite: !favorite } : item)),
+      );
+      setNotice(
+        err instanceof ApiErrorResponse ? err.message : "No se pudo guardar el favorito.",
+      );
+    } finally {
+      setPendingFavoriteId(null);
+    }
+  }
+
+  /** Exporta a CSV exactamente lo que se está viendo (búsqueda seleccionada). */
+  function handleExport() {
+    if (visible.length === 0) return;
+    // El nombre del fichero sale de la búsqueda visible, no de "tus leads":
+    // si el usuario está filtrando por una web concreta, el fichero lo dice.
+    const active = searches.find((search) => search.id === selectedSearch);
+    const name = active?.businessName ?? "todos-tus-leads";
+    const exported = clampExport(visible);
+    const ok = downloadTextFile(csvFilename(name), leadsToCsv(exported));
+    setNotice(
+      ok
+        ? `Descargados ${exported.length} leads en CSV.`
+        : "No se pudo generar el CSV en este navegador.",
+    );
+  }
 
   async function handleLogout() {
     await api.logout().catch(() => undefined);
@@ -203,11 +246,23 @@ export function DashboardClient({
           </div>
 
           <div className="flex flex-col items-stretch gap-2 sm:items-end">
-            <BulkCopyButton
-              leads={visible}
-              messages={messages}
-              onGenerated={handleMessageGenerated}
-            />
+            <div className="flex flex-wrap gap-2">
+              <button
+                type="button"
+                onClick={handleExport}
+                disabled={visible.length === 0}
+                className="btn-ghost"
+                title="Descarga los leads que estás viendo en un CSV de Excel"
+              >
+                <IconDownload />
+                Exportar CSV
+              </button>
+              <BulkCopyButton
+                leads={visible}
+                messages={messages}
+                onGenerated={handleMessageGenerated}
+              />
+            </div>
           </div>
         </div>
 
@@ -280,6 +335,8 @@ export function DashboardClient({
                 setGeneratingId(null);
               }}
               generatingId={generatingId}
+              onToggleFavorite={handleToggleFavorite}
+              pendingFavoriteId={pendingFavoriteId}
             />
           )}
         </div>

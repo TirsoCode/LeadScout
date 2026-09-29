@@ -214,6 +214,44 @@ export async function getLeadsForUser(userId: string): Promise<Lead[]> {
   );
 }
 
+/**
+ * Un lead concreto, pero SOLO si pertenece a alguna búsqueda del usuario.
+ *
+ * Es el aislamiento entre usuarios en una función: nunca se busca por `leadId`
+ * en la tabla entera, siempre se resuelve dentro de las búsquedas de quien
+ * pregunta. Un lead ajeno devuelve `null` y el llamante responde 404.
+ */
+export async function getLeadForUser(userId: string, leadId: string): Promise<Lead | null> {
+  const leads = await getLeadsForUser(userId);
+  return leads.find((lead) => lead.id === leadId) ?? null;
+}
+
+/**
+ * Marca o desmarca un lead como favorito. Devuelve el lead actualizado, o `null`
+ * si no existía o no era de este usuario.
+ *
+ * La comprobación de propiedad va DENTRO, no por contrato: un lead ajeno
+ * devuelve `null` y el route handler responde 404. En Supabase se resuelve en
+ * una sola consulta filtrando por los `search_id` del usuario.
+ */
+export async function setLeadFavorite(
+  userId: string,
+  leadId: string,
+  favorite: boolean,
+): Promise<Lead | null> {
+  if (usingSupabase()) {
+    const { supabaseSetLeadFavorite } = await supabaseStore();
+    return supabaseSetLeadFavorite(userId, leadId, favorite);
+  }
+  const searchIds = new Set((await getSearchesForUser(userId)).map((search) => search.id));
+  return mutate((data) => {
+    const lead = data.leads.find((item) => item.id === leadId);
+    if (!lead || !searchIds.has(lead.searchId)) return null;
+    lead.favorite = favorite;
+    return lead;
+  });
+}
+
 export async function saveMessage(message: Message): Promise<void> {
   if (usingSupabase()) {
     const { supabaseSaveMessage } = await supabaseStore();
@@ -314,6 +352,7 @@ function mapLead(row: Record<string, unknown>): Lead {
     matchScore: Number(row.match_score ?? 0),
     reason: String(row.reason ?? ""),
     origin: row.origin === "demo" ? "demo" : "reddit",
+    favorite: Boolean(row.favorite),
     createdAt: String(row.created_at),
   };
 }
@@ -382,9 +421,41 @@ async function buildSupabaseStore(client: SupabaseClient) {
           match_score: lead.matchScore,
           reason: lead.reason,
           origin: lead.origin,
+          // Solo en el INSERT: en un upsert sobre un lead existente, Postgres
+          // pondría `favorite: false` y el usuario perdería su marca. Por eso
+          // `setLeadFavorite` es quien la escribe después.
+          ...(lead.favorite ? { favorite: true } : {}),
           created_at: lead.createdAt,
         })),
       );
+    },
+
+    /**
+     * Marca el favorito filtrando por los `search_id` del usuario en la misma
+     * consulta: si el lead es de otro, el UPDATE no toca ninguna fila y
+     * `.select()` no devuelve nada -> `null` -> 404.
+     */
+    async supabaseSetLeadFavorite(
+      userId: string,
+      leadId: string,
+      favorite: boolean,
+    ): Promise<Lead | null> {
+      const { data: searches } = await client
+        .from("searches")
+        .select("id")
+        .eq("user_id", userId);
+      const searchIds = (searches ?? []).map((row) => String(row.id));
+      if (searchIds.length === 0) return null;
+
+      const { data, error } = await client
+        .from("leads")
+        .update({ favorite })
+        .eq("id", leadId)
+        .in("search_id", searchIds)
+        .select("*")
+        .maybeSingle();
+      if (error || !data) return null;
+      return mapLead(data);
     },
 
     async supabaseGetSearch(id: string): Promise<StoredSearch | null> {

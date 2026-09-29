@@ -7,7 +7,7 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 - `npm run dev` — dev server en **localhost:3000**
 - `npm run typecheck` — `tsc --noEmit` (verificación rápida principal)
 - `npm run lint` — `next lint`
-- `npm test` — `scripts/e2e.sh`: 33 checks contra el server por HTTP (API real, cookies y cookies de sesión)
+- `npm test` — `scripts/e2e.sh`: 48 checks contra el server por HTTP (API real, cookies y cookies de sesión)
 - `npm run test:ui` — `scripts/ui-flow.mjs`: Chromium headless, hace clic y escribe de verdad (pantalla de acceso, validación, registro, dashboard)
 - `npm run test:bg` — `scripts/check-bg.mjs`: lee el `background-color` **computado** por el navegador
 - `npm run shot -- <url> <salida.png>` — captura de pantalla headless
@@ -22,6 +22,7 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 ### Backend (route handlers, todos `force-dynamic` + `runtime: "nodejs"`)
 
 - `app/api/scan/route.ts` — `POST { url }`. Devuelve leads **enmascarados** si no hay sesión, completos si la hay. Siempre guarda el search y pone el `searchId` en la cookie httpOnly `leadscout_preview`.
+- `app/api/leads/route.ts` — `PATCH { id, favorite }`: marca/desmarca el favorito. La propiedad se comprueba DENTRO de `setLeadFavorite` (filtra por los `search_id` del usuario), así que un lead ajeno devuelve 404, nunca 403.
 - `app/api/auth/signup/route.ts` — `mode: "signup" | "login"`. Email/password por Supabase o por store local.
 - `app/api/auth/logout/route.ts`, `app/api/auth/session/route.ts` (devuelve usuario + cuota).
 - `app/api/messages/route.ts` — `POST` genera (gasta cuota), `PATCH` edita (no gasta), `GET` lista.
@@ -29,26 +30,31 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 
 ### `lib/`
 
-- `types.ts` — modelo (`BusinessProfile`, `Lead`, `Message`) y constantes (`FREE_WEEKLY_MESSAGE_LIMIT = 3`).
-- `utils.ts` — `validateUrlInput` (devuelve `{ok,url}` o `{ok:false,error}` con mensaje en español), `truncate`, `initials`, `currentIsoWeek`, `randomId`, `slug`.
+- `types.ts` — modelo (`BusinessProfile`, `Lead`, `Message`) y constantes. `Lead.favorite` es estado POR USUARIO: un lead pertenece a una búsqueda y una búsqueda a un usuario, por eso vive en la tabla `leads` y no en una tabla puente. `SCORE_TIERS`, `LeadSort` y `LEAD_SORTS` alimentan el resumen y el orden de la lista.
+- `utils.ts` — `validateUrlInput` (devuelve `{ok,url}` o `{ok:false,error}` con mensaje en español), `truncate`, `initials`, `currentIsoWeek`, `randomId`, `slug`, `daysSince`, `relativeTime`.
 - `crawl.ts` — fetch de la web del usuario + extracción de texto. **Bloquea IPs privadas/localhost (SSRF).**
 - `openrouter.ts` — cliente de IA. `extractJson()` saca el objeto JSON aunque el modelo lo envuelva en ```json o lo corte.
 - `heuristics.ts` — analizador y scoring **sin IA**. Taxonomía de 14 servicios ES/EN, señales de intención de compra, restadores (noticias, memes, "ya lo tengo").
 - `reddit.ts` — API pública de Reddit (OAuth opcional), `buildQueries` y `demoLeads` (fallback determinista).
 - `message.ts` — `generateMessageSafe`: IA, y si falla, plantilla con los datos reales del lead.
 - `mask.ts` — **enmascarado server-side de la preview anónima**.
+- `leads.ts` — utilidades PURAS de la lista, compartidas por la pantalla de resultados y el dashboard: `sortLeads`, `bucketByScore`, `summarizeLeads`, `leadsToCsv` (separador `;`, BOM, guarda contra inyección de fórmulas), `csvFilename`, `leadToText`, `whatsappShareUrl`, `twitterShareUrl`, `linkedinShareUrl`, `clampExport`.
+- `clipboard.ts` — **browser-only** (`navigator`/`document`): `copyText` con la reserva del textarea y `downloadTextFile` (Blob + ancla). No lo importes desde un Server Component.
 - `auth.ts` — sesiones. `getCurrentUser()` es la única puerta de entrada; devuelve `User` **sin `passwordHash`**.
-- `db.ts` — dos backends: Supabase (`users`/`searches`/`leads`/`messages`) o JSON local en `.data/`.
+- `db.ts` — dos backends: Supabase (`users`/`searches`/`leads`/`messages`) o JSON local en `.data/`. `getLeadForUser` y `setLeadFavorite` resuelven la propiedad dentro (aislamiento entre usuarios).
 - `secret.ts` — secreto de firma en `.data/secret`.
-- `api.ts` — contrato de la API + helpers de fetch del cliente + `ApiErrorResponse`.
+- `api.ts` — contrato de la API + helpers de fetch del cliente + `ApiErrorResponse`. `isUnlockedLead` distingue `MaskedLead` de `Lead` por su forma (`"url" in lead`).
 
 ### Frontend
 
-- `app/page.tsx` — landing (server). Redirige los `?auth=...` antiguos a `/auth`.
+- `app/page.tsx` — landing (server). Redirige los `?auth=...` antiguos a `/auth`. El scan ya no pinta resultados aquí: navega a `/resultados/<searchId>`, así que la landing queda solo de entrada.
+- `app/resultados/[searchId]/page.tsx` — la pantalla de resultados (server). Acceso: con sesión y la búsqueda es suya → leads completos; sin sesión pero la búsqueda es la de la cookie de preview → `maskLead()`; cualquier otra cosa → `notFound()`.
+- `app/lead/[id]/page.tsx` — ficha del lead (server). Solo con sesión y lead propio (`getLeadForUser`); el anónimo va a `/auth?mode=signup&next=/lead/<id>` y un lead ajeno da `notFound()`.
 - `app/auth/page.tsx` — pantalla de acceso (server): lee `mode`, `err` y `next`, y pasa a `AuthScreen`.
 - `app/dashboard/page.tsx` — server: carga datos y pasa a `DashboardClient`.
-- `components/landing/` — `scan-experience.tsx` (máquina de estados `idle → analyzing → results`), `pixelated-results.tsx` (`LeadRow` es compartido con el dashboard), `analyzing.tsx`, `sections.tsx` (stats, cómo funciona, precios, FAQ, teaser de mensajes).
-- `components/dashboard/` — `leads-table.tsx` (filtros + búsqueda), `message-panel.tsx` (generar/editar/copiar), `dashboard-client.tsx`.
+- `components/landing/` — `scan-experience.tsx` (solo `idle → analyzing`, después navega), `analyzing.tsx`, `sections.tsx` (funcionamiento, precios, teaser de mensajes).
+- `components/results/` — `results-screen.tsx` (resumen, orden, favoritos, CSV, compartir, `MessagePanel` y `LockedPanel`), `lead-row.tsx` (`LeadRow`, compartida con el dashboard), `lead-detail.tsx`, `lead-stats.tsx`.
+- `components/dashboard/` — `leads-table.tsx` (filtros + búsqueda + orden + solo favoritos), `message-panel.tsx` (generar/editar/copiar), `dashboard-client.tsx` (favoritos + exportar CSV), `search-history.tsx` (con enlace "Abrir" a `/resultados/<id>`).
 - `components/auth/auth-screen.tsx` — `/auth` partida en dos: panel de marca verde (`accent-dim`) + formulario. Incluye el toggle de contraseña y el enlace que alterna signup/login.
 - `middleware.ts` — refresca la sesión de Supabase con `getClaims()`. Sin él, los Server Components no pueden renovar el token (no pueden escribir cookies) y la sesión muere a la hora.
 
@@ -61,10 +67,15 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 - **La autenticación es una pantalla propia, no un modal.** `/auth` parte la
   viewport: panel verde de marca a la izquierda, formulario a la derecha. La
   navbar navega a `/auth?mode=signup|login` (con `router.push`, que no remonta
-  nada), el botón "desbloquear" de la preview va a `/auth?mode=signup` y un
-  OAuth fallido aterriza en `/auth?err=...`. La landing redirige los enlaces
-  viejos `/?auth=...` a `/auth`, así que `ScanExperience` ya no usa
-  `useSearchParams` ni `<Suspense>`.
+  nada) y un OAuth fallido aterriza en `/auth?err=...`. La landing redirige los
+  enlaces viejos `/?auth=...` a `/auth`, así que `ScanExperience` ya no usa
+  `useSearchParams` ni `<Suspense>`. `/auth` acepta `next` para volver a una
+  ruta interna tras entrar (`safeNext` valida que empiece por `/` y no por `//`):
+  lo usan `/resultados/<searchId>` y `/lead/<id>`.
+- **El CTA de desbloqueo no existe.** El anónimo ve su búsqueda enmascarada en
+  `/resultados/<searchId>` con un `LockedPanel` informativo (degradado suave,
+  sin botón "Unlock": ese CTA se quitó porque competía con la navbar). El
+  registro se hace desde la navbar o con `next` si viene de una ficha de lead.
 - **Cambiar `tailwind.config.ts` no invalida el CSS de `.next`.** El dev server sigue sirviendo las utilities con los valores viejos: tras pasar a fondo blanco, `.text-ink` seguía valiendo `#fff` y el texto quedaba blanco sobre blanco sin error de build. **Solución: parar el dev server, `rm -rf .next`, arrancar.** Si tocas tokens de color, hazlo siempre.
 - **Nunca lances `npm run build` con `next dev` corriendo**: los dos escriben en `.next` y corrompen el CSS servido (página sin estilos). Para el build, para el dev server antes.
 - **`.data/` está en `.gitignore`**: contiene el secret y la base de datos local de desarrollo.
@@ -72,7 +83,8 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 - **El botón de Google se muestra siempre**, tenga o no Supabase configurado. Si faltan `NEXT_PUBLIC_SUPABASE_URL` / `NEXT_PUBLIC_SUPABASE_ANON_KEY`, `handleGoogle` (en `components/auth/auth-screen.tsx`) lo explica en la propia pantalla en vez de dejar un botón muerto. Ya no existe la prop `googleEnabled`: si la añades de vuelta para ocultarlo, recuerda que es una decisión de producto, no un detalle técnico.
 - **El `title` de cada página se escribe entero y a mano, y con `absolute`.** El `layout` define el `template` `"%s · LeadScout"`, y ese template **sí** se aplica al `title` de una página: con `title: "LeadScout"` la pestaña se quedaba en "LeadScout · LeadScout". Por eso las tres páginas usan `title: { absolute: "LeadScout" }`.
 - `metadata` de `/dashboard` y `/auth` es `robots: noindex`. Las páginas son dinámicas (leen cookies), nada de `output: "export"`.
-- **El esquema de la BD vive en `supabase/migrations/`, no en `lib/db.ts`.** Antes había un `ensureSchema()` que intentaba crear las tablas con un RPC `exec_sql` que no existía; se eliminó. Se aplica con `supabase db push --linked`. Los ids de `searches`/`leads`/`messages` son `text` (los pone `randomId()`), no `uuid`: no los cambies sin tocar los `map*` de `lib/db.ts`.
+- **El esquema de la BD vive en `supabase/migrations/`, no en `lib/db.ts`.** Antes había un `ensureSchema()` que intentaba crear las tablas con un RPC `exec_sql` que no existía; se eliminó. Se aplica con `supabase db push --linked`. Los ids de `searches`/`leads`/`messages` son `text` (los pone `randomId()`), no `uuid`: no los cambies sin tocar los `map*` de `lib/db.ts`. Además de añadir la columna `favorite`, las migraciones son donde vive cualquier cambio de esquema nuevo (la última: `20260929000100_lead_favorite.sql`).
+- **Un upsert no debe pisar el `favorite`.** `supabaseSaveLeads` omite la columna `favorite` del payload salvo que sea `true`, de forma que re-guardar un scan de nuevo no borra las estrellas que el usuario ya marcó. `mapLead` lee `favorite` con `Boolean(row.favorite)`, seguro aunque la columna no exista todavía.
 - **Supabase ya está configurado en este entorno** (proyecto `lmxiakrjbeoqgwigmvmx`): `.env.local` existe con la `service_role` y el esquema está aplicado, así que `npm test` y `npm run test:ui` corren contra la nube, no contra `.data/`. Para volver al modo local, renombra `.env.local` y reinicia. Las claves se regeneran con `npm run supabase:setup` (nunca a mano, nunca al repo).
 - **`mailer_autoconfirm` está en `true` en el proyecto** (necesario en dev para que el registro devuelva sesión sin correo). Al desplegar en producción, desactívalo y pon un SMTP real.
 
@@ -80,6 +92,6 @@ Micro-SaaS que encuentra clientes potenciales a partir de la web de un negocio (
 
 - Paleta en `tailwind.config.ts`: `bg #ffffff`, `bg-2 #f4f7f5`, `accent #15803d`, `accent-dim #166534`, `line #dde5e0`, `ink #0f1a14`, `ink-2 #4b574f`. Fondo **blanco**; el verde se oscureció a `#15803d` porque es el tono más claro que todavía da 5:1 con texto blanco, y los botones (`text-white` sobre `bg-accent`) y el texto de acento necesitan AA sobre blanco.
 - Títulos en serif (`Playfair Display`), UI en sans (`Inter`); ambas vía `next/font` con variables CSS.
-- Clases reutilizables en `app/globals.css` (`.btn-accent`, `.card`, `.input`, `.badge`, `.pixelated`, `.locked-veil`, `.container-page`).
+- Clases reutilizables en `app/globals.css` (`.btn-accent`, `.card`, `.input`, `.badge`, `.pixelated`, `.locked-veil`, `.container-page`). `.locked-veil` es un degradado con el color de la tarjeta (`bg-2`) que disuelve la lista en el `LockedPanel`: antes eran rayas diagonales y parecían un fallo de render.
 - `app/layout.tsx` lleva `backgroundColor` **inline** (`#ffffff`) en `<html>` y `<body>` a propósito: evita el flash si el CSS tarda o queda cacheado.
 - `color-scheme: light` en `globals.css` y en el `viewport`: sin esto el navegador pinta los scrollbars oscuros y los `autofill` en negro.

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { api, ApiErrorResponse, type GenerateMessageResponse } from "@/lib/api";
 import type { Lead, Message } from "@/lib/types";
+import { copyText } from "@/lib/clipboard";
 import { IconClose, IconCopy, IconLock, IconMessage, IconSpinner } from "@/components/icons";
 
 export type Quota = { used: number; limit: number | null; remaining: number | null };
@@ -101,13 +102,14 @@ export function MessagePanel({
   }
 
   async function copy() {
-    try {
-      await navigator.clipboard.writeText(text);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    } catch {
+    // `copyText` trae la reserva del textarea cuando `navigator.clipboard` no
+    // está disponible (contexto no seguro o permiso denegado).
+    if (!(await copyText(text))) {
       setError("No se pudo copiar. Selecciona el texto y cópialo a mano.");
+      return;
     }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1800);
   }
 
   // `limit === null` == sin tope: los mensajes son ilimitados por ahora.

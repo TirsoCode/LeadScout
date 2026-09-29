@@ -122,56 +122,6 @@ export function Pricing() {
   );
 }
 
-const FAQS = [
-  {
-    q: "¿De dónde salen los leads?",
-    a: "De Reddit. Buscamos conversaciones donde alguien pide el servicio que tú ofreces, así que el lead es real y el contexto es público.",
-  },
-  {
-    q: "¿Cómo se calcula el porcentaje de match?",
-    a: "La IA lee cada post o perfil y estima qué probabilidad hay de que esa persona necesite tu servicio. El porcentaje se acompaña siempre del motivo, para que sepas por qué te lo recomienda.",
-  },
-  {
-    q: "¿Por qué los leads aparecen pixelados?",
-    a: "Porque los nombres y perfiles no salen de nuestra base de datos hasta que te registras. Es una demo honesta: ves que los leads existen de verdad, no una captura de pantalla.",
-  },
-  {
-    q: "¿Los mensajes son plantillas?",
-    a: "No. Se generan de verdad a partir de tu negocio y del post concreto del lead, en un tono profesional y natural. Puedes editarlos antes de copiarlos.",
-  },
-  {
-    q: "¿Necesito tarjeta de crédito?",
-    a: "No. El registro es gratuito y no pedimos ningún pago.",
-  },
-];
-
-export function Faq() {
-  return (
-    <section id="faq" className="border-t border-line/60 bg-bg-2 py-20 sm:py-24">
-      <div className="container-page">
-        <div className="mx-auto max-w-2xl text-center">
-          <span className="badge border-line bg-bg-2 text-ink-2">FAQ</span>
-          <h2 className="mt-4 font-serif text-3xl font-bold tracking-tight sm:text-4xl">
-            Preguntas frecuentes
-          </h2>
-        </div>
-
-        <div className="mx-auto mt-12 max-w-2xl space-y-3">
-          {FAQS.map((faq) => (
-            <details key={faq.q} className="card group p-5">
-              <summary className="flex cursor-pointer items-center justify-between gap-4 font-medium">
-                {faq.q}
-                <span className="text-accent transition-transform group-open:rotate-45">+</span>
-              </summary>
-              <p className="mt-3 text-sm leading-relaxed text-ink-2">{faq.a}</p>
-            </details>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-}
-
 const MESSAGE_PREVIEW = [
   { name: "Sarah M.", line: "Vi tu publicación en r/smallbusiness sobre la web anticuada de tu clínica…" },
   { name: "Lead 3 · 94% match", line: "Hola, vi que buscas rediseñar el packaging de tu marca de café…" },
