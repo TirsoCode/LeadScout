@@ -4,7 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiErrorResponse } from "@/lib/api";
 import { validateUrlInput } from "@/lib/utils";
-import { IconArrow, IconClose, IconGlobe, IconSearch, IconSparkle } from "@/components/icons";
+import { IconArrow, IconClose, IconSearch, IconSparkle } from "@/components/icons";
 import { Analyzing } from "@/components/landing/analyzing";
 
 type Phase = "idle" | "analyzing";
@@ -55,38 +55,41 @@ export function ScanExperience() {
     <>
       {/* ---------------- Paso 1: la caja de la URL ---------------- */}
       {phase === "idle" ? (
-        <div className="mx-auto w-full max-w-2xl">
+        <div className="mx-auto w-full max-w-2xl lg:mx-0">
           <form onSubmit={handleScan} noValidate>
-            <div className="flex flex-col gap-3 sm:flex-row">
-              <div className="relative flex-1">
-                <IconGlobe
-                  className={`pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 ${
-                    error ? "text-red-400" : "text-ink-2/70"
-                  }`}
-                />
-                <input
-                  type="text"
-                  inputMode="url"
-                  autoComplete="url"
-                  spellCheck={false}
-                  aria-label="URL de tu web"
-                  aria-invalid={Boolean(error)}
-                  aria-describedby={error ? "url-error" : undefined}
-                  placeholder="Enter your website URL"
-                  className={`input !py-3.5 !pl-12 !text-base ${
-                    error ? "!border-red-500/60 focus:!ring-red-500/60" : ""
-                  }`}
-                  value={url}
-                  onChange={(event) => {
-                    setUrl(event.target.value);
-                    // En cuanto el usuario corrige, el error desaparece.
-                    if (error) setError(null);
-                  }}
-                />
-              </div>
-              <button type="submit" className="btn-accent shrink-0 !px-6 !py-3.5 !text-base">
-                <IconSearch className="h-4 w-4" />
+            {/* Buscador en píldora: icono + input + botón dentro del mismo
+                borde redondeado, como un solo control. */}
+            <div
+              className={`flex items-center gap-2 rounded-full border bg-white py-1.5 pl-5 pr-1.5 transition-colors focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/15 ${
+                error ? "border-red-500/70" : "border-line"
+              }`}
+            >
+              <IconSearch
+                className={`h-5 w-5 shrink-0 ${error ? "text-red-500" : "text-ink-2/60"}`}
+              />
+              <input
+                type="text"
+                inputMode="url"
+                autoComplete="url"
+                spellCheck={false}
+                aria-label="URL de tu web"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "url-error" : undefined}
+                placeholder="Enter your website URL"
+                className="w-full min-w-0 border-0 bg-transparent py-2.5 text-base text-ink outline-none placeholder:text-ink-2/70"
+                value={url}
+                onChange={(event) => {
+                  setUrl(event.target.value);
+                  // En cuanto el usuario corrige, el error desaparece.
+                  if (error) setError(null);
+                }}
+              />
+              <button
+                type="submit"
+                className="btn-accent shrink-0 !rounded-full !px-5 !py-3 !text-sm"
+              >
                 Buscar leads
+                <IconArrow className="h-4 w-4" />
               </button>
             </div>
 
@@ -94,7 +97,7 @@ export function ScanExperience() {
               <p
                 id="url-error"
                 role="alert"
-                className="mt-3 flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/10 px-3.5 py-2.5 text-sm text-red-300"
+                className="mt-3 flex items-start gap-2 rounded-lg border border-red-500/40 bg-red-500/10 px-3.5 py-2.5 text-sm text-red-600"
               >
                 <IconClose className="mt-0.5 h-4 w-4 shrink-0" />
                 {error}
@@ -132,14 +135,25 @@ export function ScanExperience() {
 /** Hero de la landing. Separado para que la página pueda alternarlo. */
 export function HeroCopy() {
   return (
-    <div className="mx-auto max-w-3xl text-center">
-      <h1 className="font-serif text-4xl font-bold leading-[1.08] tracking-tight sm:text-6xl">
-        Clientes potenciales que
+    <div className="max-w-xl">
+      {/* Tres líneas, la última en verde con un subrayado tipo rotulador: es el
+          recurso visual que ancla la promesa en la frase. */}
+      <h1 className="font-serif text-[2.75rem] font-bold leading-[1.03] tracking-tight sm:text-6xl lg:text-[4.25rem]">
+        Encuentra
         <br />
-        <span className="text-accent">sí que responden.</span>
+        clientes que
+        <br />
+        <span className="relative inline-block">
+          <span className="text-accent">sí responden.</span>
+          <span
+            aria-hidden="true"
+            className="absolute -bottom-1.5 left-0 h-2 w-full rounded-full bg-accent/25"
+          />
+        </span>
       </h1>
-      <p className="mx-auto mt-5 max-w-xl text-base leading-relaxed text-ink-2 sm:text-lg">
-        La mayoría envía spam a negocios saturados y no recibe nada. LeadScout encuentra a quienes tienen nuevas necesidades, presupuesto fresco y buscan proveedores ahora mismo.
+      <p className="mt-6 max-w-lg text-base leading-relaxed text-ink-2 sm:text-lg">
+        La mayoría manda mensajes a negocios saturados y no recibe nada. LeadScout encuentra a
+        quienes tienen nuevas necesidades, presupuesto fresco y buscan proveedor ahora mismo.
       </p>
     </div>
   );

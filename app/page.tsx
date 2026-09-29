@@ -3,7 +3,13 @@ import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
 import { HeroCopy, ScanExperience } from "@/components/landing/scan-experience";
-import { HowItWorks, MessageTeaser, Pricing, Stats } from "@/components/landing/sections";
+import {
+  HowItWorks,
+  MessagePreview,
+  MessageTeaser,
+  Pricing,
+  Stats,
+} from "@/components/landing/sections";
 import { getCurrentUser } from "@/lib/auth";
 
 export const metadata: Metadata = {
@@ -38,17 +44,23 @@ export default async function LandingPage({
       <SiteHeader userEmail={user?.email} />
 
       <main className="flex-1">
-        {/* Hero: fondo verde oscuro liso, sin gradientes (SPEC.md) */}
+        {/* Hero a dos columnas: promesa + buscador a la izquierda, la tarjeta
+            de mensaje con su afinidad a la derecha. Fondo blanco liso.
+            Alineado arriba (sin centrado vertical) para que el titular no
+            arranque a media pantalla. */}
         <section id="top" className="border-b border-line/60">
-          <div className="container-page flex min-h-[calc(100vh-4rem)] flex-col justify-center py-16 sm:py-20">
-            <div className="flex flex-col items-center gap-10">
+          <div className="container-page grid items-start gap-12 pb-16 pt-8 sm:pb-20 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
+            <div>
               <HeroCopy />
-              <ScanExperience />
+              <div className="mt-8">
+                <ScanExperience />
+              </div>
+              <div className="mt-6">
+                <Stats />
+              </div>
             </div>
 
-            <div className="mt-16 border-t border-line/50 pt-10">
-              <Stats />
-            </div>
+            <MessagePreview />
           </div>
         </section>
 

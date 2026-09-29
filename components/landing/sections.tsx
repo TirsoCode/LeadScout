@@ -6,16 +6,21 @@ const STATS = [
   { value: "9.2k", label: "usuarios registrados" },
 ];
 
+/**
+ * Nota de datos en monoespaciada, bajo el buscador: lee como el pie de un
+ * dataset ("N registros · N documentos · fuente X"), no como un contador
+ * de métricas.
+ */
 export function Stats() {
   return (
-    <div className="grid grid-cols-3 gap-3 sm:gap-6">
-      {STATS.map((stat) => (
-        <div key={stat.label} className="text-center">
-          <div className="font-serif text-2xl font-bold text-accent sm:text-4xl">{stat.value}</div>
-          <div className="mt-1 text-[11px] uppercase tracking-wider text-ink-2 sm:text-sm">{stat.label}</div>
-        </div>
+    <p className="font-mono text-xs leading-relaxed text-ink-2/80 sm:text-[13px]">
+      {STATS.map((stat, index) => (
+        <span key={stat.label}>
+          {index > 0 ? <span className="text-ink-2/40">{" · "}</span> : null}
+          {stat.value} {stat.label}
+        </span>
       ))}
-    </div>
+    </p>
   );
 }
 
@@ -171,5 +176,96 @@ export function MessageTeaser() {
         </div>
       </div>
     </section>
+  );
+}
+
+const PREVIEW_MESSAGE = {
+  to: "u/taller_madera_norte",
+  subject: "Tu web no carga en móvil",
+  score: 94,
+  body: [
+    "Hola, vi tu publicación en r/muebles: la web del taller no carga en móvil y ahí se te están yendo los pedidos.",
+    "Justo la semana pasada entregué una tienda para un carpintero con el mismo problema.",
+    "¿Te cuento en 15 minutos cómo lo resolvimos?",
+  ],
+};
+
+/** Anillo de afinidad: el arco mide el score, el % va en el centro. */
+function MatchRing({ score }: { score: number }) {
+  const radius = 34;
+  const circumference = 2 * Math.PI * radius;
+
+  return (
+    <div
+      className="relative h-[74px] w-[74px] shrink-0"
+      role="img"
+      aria-label={`${score}% de afinidad`}
+    >
+      <svg viewBox="0 0 76 76" className="h-full w-full -rotate-90" aria-hidden="true">
+        <circle cx="38" cy="38" r={radius} fill="none" stroke="#e6ece8" strokeWidth="5" />
+        <circle
+          cx="38"
+          cy="38"
+          r={radius}
+          fill="none"
+          stroke="#15803d"
+          strokeWidth="5"
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference * (1 - score / 100)}
+        />
+      </svg>
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-lg font-bold leading-none text-ink">{score}%</span>
+        <span className="mt-1 text-[8px] font-semibold uppercase tracking-[0.14em] text-ink-2">
+          match
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/**
+ * La tarjeta del hero: un mensaje real (para / asunto / cuerpo) con su
+ * afinidad. Es la prueba visible de lo que el producto hace por ti.
+ */
+export function MessagePreview() {
+  const last = PREVIEW_MESSAGE.body.length - 1;
+
+  return (
+    <aside className="card overflow-hidden rounded-2xl bg-white shadow-card" aria-label="Ejemplo de mensaje generado">
+      <div className="flex items-start justify-between gap-5 border-b border-line/70 px-5 py-5 sm:px-7 sm:py-6">
+        <dl className="min-w-0 space-y-3">
+          <div className="flex items-baseline gap-4">
+            <dt className="w-[62px] shrink-0 font-mono text-[11px] uppercase tracking-wider text-ink-2/70">
+              Para
+            </dt>
+            <dd className="truncate text-[15px] font-semibold text-ink">{PREVIEW_MESSAGE.to}</dd>
+          </div>
+          <div className="flex items-baseline gap-4">
+            <dt className="w-[62px] shrink-0 font-mono text-[11px] uppercase tracking-wider text-ink-2/70">
+              Asunto
+            </dt>
+            <dd className="truncate text-[15px] text-ink-2">{PREVIEW_MESSAGE.subject}</dd>
+          </div>
+        </dl>
+        <MatchRing score={PREVIEW_MESSAGE.score} />
+      </div>
+
+      <div className="space-y-4 px-5 py-6 text-[15px] leading-relaxed text-ink-2 sm:px-7 sm:py-7">
+        {PREVIEW_MESSAGE.body.map((paragraph, index) => (
+          <p key={paragraph}>
+            {paragraph}
+            {index === last ? (
+              // Cursor de "se está escribiendo ahora mismo".
+              <span
+                aria-hidden="true"
+                className="ml-0.5 inline-block h-[1em] w-[2px] translate-y-[0.15em] animate-pulse bg-ink-2/70"
+              />
+            ) : null}
+          </p>
+        ))}
+      </div>
+    </aside>
   );
 }
