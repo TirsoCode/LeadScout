@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { SiteHeader } from "@/components/site-header";
 import { SiteFooter } from "@/components/site-footer";
-import { HeroCopy, ScanExperience } from "@/components/landing/scan-experience";
+import { ScanExperience } from "@/components/landing/scan-experience";
 import {
   HowItWorks,
   MessagePreview,
@@ -44,24 +44,13 @@ export default async function LandingPage({
       <SiteHeader userEmail={user?.email} />
 
       <main className="flex-1">
-        {/* Hero a dos columnas: promesa + buscador a la izquierda, la tarjeta
-            de mensaje con su afinidad a la derecha. Fondo blanco liso.
-            Alineado arriba (sin centrado vertical) para que el titular no
-            arranque a media pantalla. */}
+        {/* El hero lo monta `ScanExperience` porque su estado decide la
+            disposición: en reposo son dos columnas (promesa + buscador a la
+            izquierda, tarjeta a la derecha) y durante el scan una pantalla
+            de análisis a página completa. La tarjeta y la nota de datos
+            entran como contenido de servidor. */}
         <section id="top" className="border-b border-line/60">
-          <div className="container-page grid items-start gap-12 pb-16 pt-8 sm:pb-20 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
-            <div>
-              <HeroCopy />
-              <div className="mt-8">
-                <ScanExperience />
-              </div>
-              <div className="mt-6">
-                <Stats />
-              </div>
-            </div>
-
-            <MessagePreview />
-          </div>
+          <ScanExperience preview={<MessagePreview />} footer={<Stats />} />
         </section>
 
         <HowItWorks />

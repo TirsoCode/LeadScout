@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiErrorResponse } from "@/lib/api";
 import { validateUrlInput } from "@/lib/utils";
@@ -12,11 +12,24 @@ type Phase = "idle" | "analyzing";
 const EXAMPLES = ["stripe.com", "fiverr.com", "awebdesigner.com"];
 
 /**
- * El input de la landing. Cuando el scan termina NO se pinta aquí: navega a
+ * El hero de la landing: la caja de la URL y, mientras el scan corre, la
+ * pantalla de análisis. Cuando el scan termina NO se pinta aquí: navega a
  * `/resultados/<searchId>`, que es su propia pantalla. La landing queda como
  * punto de entrada y la lista de leads vive en su sitio.
+ *
+ * `preview` (la tarjeta del mensaje) y `footer` (la nota de datos) los pasa
+ * la página desde el servidor. Aquí se decide cuándo se ven: en fase de
+ * análisis se retiran, para que la pantalla de carga ocupe la página entera
+ * bien centrada en vez de quedarse en la columna de la izquierda con media
+ * pantalla vacía al lado.
  */
-export function ScanExperience() {
+export function ScanExperience({
+  preview,
+  footer,
+}: {
+  preview?: ReactNode;
+  footer?: ReactNode;
+}) {
   const router = useRouter();
   const [url, setUrl] = useState("");
   const [phase, setPhase] = useState<Phase>("idle");
@@ -51,11 +64,22 @@ export function ScanExperience() {
     }
   }
 
+  // ---------------- Fase 2: análisis a pantalla completa ----------------
+  if (phase === "analyzing") {
+    return (
+      <div className="container-page pb-20 pt-10 sm:pt-14">
+        <Analyzing />
+      </div>
+    );
+  }
+
+  // ---------------- Fase 1: promesa + buscador + tarjeta ----------------
   return (
-    <>
-      {/* ---------------- Paso 1: la caja de la URL ---------------- */}
-      {phase === "idle" ? (
-        <div className="mx-auto w-full max-w-2xl lg:mx-0">
+    <div className="container-page grid items-start gap-12 pb-16 pt-8 sm:pb-20 sm:pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-16">
+      <div>
+        <HeroCopy />
+
+        <div className="mt-8 w-full">
           <form onSubmit={handleScan} noValidate>
             {/* Buscador en píldora: icono + input + botón dentro del mismo
                 borde redondeado, como un solo control. */}
@@ -124,15 +148,16 @@ export function ScanExperience() {
             No hace falta registro. Verás los resultados al instante.
           </p>
         </div>
-      ) : null}
 
-      {/* ---------------- Paso 2: análisis ---------------- */}
-      {phase === "analyzing" ? <Analyzing /> : null}
-    </>
+        {footer ? <div className="mt-6">{footer}</div> : null}
+      </div>
+
+      {preview}
+    </div>
   );
 }
 
-/** Hero de la landing. Separado para que la página pueda alternarlo. */
+/** Titular y párrafo del hero. */
 export function HeroCopy() {
   return (
     <div className="max-w-xl">
@@ -156,14 +181,5 @@ export function HeroCopy() {
         quienes tienen nuevas necesidades, presupuesto fresco y buscan proveedor ahora mismo.
       </p>
     </div>
-  );
-}
-
-export function HeroActions() {
-  return (
-    <a href="#como-funciona" className="btn-ghost">
-      Cómo funciona
-      <IconArrow />
-    </a>
   );
 }
